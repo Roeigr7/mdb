@@ -1,0 +1,22 @@
+services:
+  postgres-test:
+    image: postgres:16-alpine
+    container_name: mbd-dashboard-postgres-test
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: mbd_test
+      POSTGRES_PASSWORD: mbd_test
+      POSTGRES_DB: mbd_dashboard_test
+    ports:
+      # Host 5433 avoids colliding with the local development Postgres on 5432
+      - '5433:5432'
+    volumes:
+      - mbd_dashboard_pg_test_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U mbd_test -d mbd_dashboard_test']
+      interval: 3s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  mbd_dashboard_pg_test_data:
