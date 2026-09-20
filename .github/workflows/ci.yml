@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    name: test
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: backend
+
+    env:
+      # Isolated CI Postgres only — never the local/dev mbd_dashboard database.
+      E2E_DATABASE_URL: postgresql://mbd_test:mbd_test@localhost:5432/mbd_dashboard_test
+      DATABASE_URL: postgresql://mbd_test:mbd_test@localhost:5432/mbd_dashboard_test
+      JWT_SECRET: ci-test-jwt-secret-do-not-use-in-production
+      JWT_ACCESS_EXPIRES_IN: 15m
+      JWT_REFRESH_EXPIRES_IN: 7d
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: mbd_test
+          POSTGRES_PASSWORD: mbd_test
+          POSTGRES_DB: mbd_dashboard_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U mbd_test -d mbd_dashboard_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Apply Prisma migrations to CI test database
+        run: npm run test:e2e:migrate
+
+      - name: Unit tests
+        run: npm test
+
+      - name: E2E tests
+        run: npm run test:e2e
+
+      - name: Build
+        run: npm run build

@@ -14,18 +14,17 @@ if (!e2eDatabaseUrl) {
   process.exit(1);
 }
 
-const result = spawnSync(
-  'npx.cmd',
-  ['prisma', 'migrate', 'deploy'],
-  {
-    stdio: 'inherit',
-    env: {
-      ...process.env,
-      // Force Prisma CLI onto the E2E database only — never the development URL.
-      DATABASE_URL: e2eDatabaseUrl,
-    },
-    shell: true,
+// Cross-platform: Windows shells often need `npx.cmd`; Linux/macOS use `npx`.
+const npxBin = process.platform === 'win32' ? 'npx.cmd' : 'npx';
+
+const result = spawnSync(npxBin, ['prisma', 'migrate', 'deploy'], {
+  stdio: 'inherit',
+  env: {
+    ...process.env,
+    // Force Prisma CLI onto the E2E database only — never the development URL.
+    DATABASE_URL: e2eDatabaseUrl,
   },
-);
+  shell: true,
+});
 
 process.exit(result.status ?? 1);
