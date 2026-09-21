@@ -20,6 +20,9 @@ export const he = {
     reports: 'דוחות',
     suppliers: 'ספקים',
     settings: 'הגדרות',
+    sectionGeneral: 'כללי',
+    sectionManagement: 'ניהול',
+    sectionSystem: 'מערכת',
   },
   header: {
     openNav: 'פתיחת ניווט',
@@ -67,6 +70,11 @@ export const he = {
     register: 'הרשמה',
     createAccount: 'יצירת חשבון',
     subtitle: 'לוח בקרה תפעולי לפרויקטים ולרווחיות.',
+    heroLine: 'ניהול פרויקטים, הוצאות והכנסות במקום אחד.',
+    heroSupport:
+      'לוח בקרה מקצועי לצוותי מתכת ובנייה — ברור, מדויק ומוכן לעבודה יומיומית.',
+    heroFootnoteLabel: 'M.B.D. Metals',
+    heroFootnote: 'תפעול · רווחיות · שליטה מלאה בנתונים',
     name: 'שם',
     email: 'דוא״ל',
     password: 'סיסמה',
@@ -95,6 +103,10 @@ export const he = {
   dashboard: {
     title: 'סקירה',
     subtitle: 'מעקב אחר פרויקטים וביצועים תפעוליים של M.B.D. Metals.',
+    welcomeEyebrow: 'ברוכים הבאים',
+    welcomeTitle: 'שלום, {{name}}',
+    welcomeBody:
+      'הנה תמונת מצב עדכנית של ההכנסות, ההוצאות והפרויקטים שלכם.',
     loadError: 'לא ניתן לטעון את נתוני לוח הבקרה',
     totalProjects: 'סה״כ פרויקטים',
     projectsHint: 'מתוך רשימת הפרויקטים שלך',

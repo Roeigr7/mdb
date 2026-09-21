@@ -1,12 +1,11 @@
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
 import Link from '@mui/material/Link';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
+import { alpha } from '@mui/material/styles';
 import { useState, type FormEvent } from 'react';
 import { useDispatch } from 'react-redux';
 import { Link as RouterLink, useNavigate, useSearchParams } from 'react-router-dom';
@@ -69,7 +68,11 @@ export function LoginPage({ initialMode = 'login' }: LoginPageProps) {
 
     try {
       if (mode === 'register') {
-        await register({ name: trimmedName, email: trimmedEmail, password }).unwrap();
+        await register({
+          name: trimmedName,
+          email: trimmedEmail,
+          password,
+        }).unwrap();
       }
       const tokens = await login({
         email: trimmedEmail,
@@ -89,129 +92,262 @@ export function LoginPage({ initialMode = 'login' }: LoginPageProps) {
       sx={{
         minHeight: '100vh',
         display: 'grid',
-        placeItems: 'center',
-        px: 2,
-        background: `
-          radial-gradient(ellipse 80% 60% at 20% 10%, rgba(30, 58, 95, 0.12), transparent),
-          radial-gradient(ellipse 60% 50% at 90% 80%, rgba(92, 107, 122, 0.1), transparent),
-          #f5f7fa
-        `,
+        gridTemplateColumns: { xs: '1fr', md: '1.05fr 0.95fr' },
       }}
     >
-      <Card sx={{ width: '100%', maxWidth: 420 }}>
-        <CardContent sx={{ p: { xs: 3, sm: 4 } }}>
-          <Stack
-            direction="row"
-            sx={{ justifyContent: 'flex-end', mb: 2 }}
+      <Box
+        sx={{
+          display: { xs: 'none', md: 'flex' },
+          position: 'relative',
+          overflow: 'hidden',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+          p: { md: 5, lg: 7 },
+          color: '#fff',
+          backgroundColor: '#0b1f3a',
+          backgroundImage: `
+            radial-gradient(ellipse 90% 70% at 10% 15%, ${alpha('#2b4c7e', 0.7)}, transparent 55%),
+            radial-gradient(ellipse 70% 60% at 90% 85%, ${alpha('#16375f', 0.9)}, transparent 50%),
+            linear-gradient(160deg, #0b1f3a 0%, #132740 55%, #0f2440 100%)
+          `,
+        }}
+      >
+        <Box
+          aria-hidden
+          sx={{
+            position: 'absolute',
+            inset: 0,
+            opacity: 0.18,
+            backgroundImage: `
+              linear-gradient(${alpha('#fff', 0.08)} 1px, transparent 1px),
+              linear-gradient(90deg, ${alpha('#fff', 0.08)} 1px, transparent 1px)
+            `,
+            backgroundSize: '48px 48px',
+            maskImage:
+              'radial-gradient(ellipse 80% 70% at 50% 40%, #000 20%, transparent 75%)',
+          }}
+        />
+
+        <Stack spacing={1.5} sx={{ position: 'relative', zIndex: 1 }}>
+          <Box
+            sx={{
+              width: 48,
+              height: 48,
+              borderRadius: 2,
+              display: 'grid',
+              placeItems: 'center',
+              fontWeight: 800,
+              letterSpacing: 0.6,
+              bgcolor: alpha('#fff', 0.1),
+              border: `1px solid ${alpha('#fff', 0.16)}`,
+            }}
           >
-            <LanguageSwitcher />
-          </Stack>
-          <Stack spacing={0.5} sx={{ mb: 3 }}>
-            <Typography
-              variant="overline"
-              color="primary"
-              sx={{ letterSpacing: 1.2, fontWeight: 700 }}
+            MBD
+          </Box>
+          <Typography
+            variant="h2"
+            sx={{
+              fontWeight: 800,
+              letterSpacing: '-0.03em',
+              maxWidth: 420,
+              mt: 4,
+              fontSize: { md: '2.6rem', lg: '3rem' },
+            }}
+          >
+            {t('app.name')}
+          </Typography>
+          <Typography
+            variant="h6"
+            sx={{
+              fontWeight: 500,
+              color: alpha('#fff', 0.78),
+              maxWidth: 420,
+              lineHeight: 1.5,
+            }}
+          >
+            {t('auth.heroLine')}
+          </Typography>
+          <Typography
+            variant="body1"
+            sx={{ color: alpha('#fff', 0.55), maxWidth: 400 }}
+          >
+            {t('auth.heroSupport')}
+          </Typography>
+        </Stack>
+
+        <Stack
+          spacing={1}
+          sx={{ position: 'relative', zIndex: 1, maxWidth: 360 }}
+        >
+          <Typography variant="overline" sx={{ color: alpha('#fff', 0.45) }}>
+            {t('auth.heroFootnoteLabel')}
+          </Typography>
+          <Typography variant="body2" sx={{ color: alpha('#fff', 0.65) }}>
+            {t('auth.heroFootnote')}
+          </Typography>
+        </Stack>
+      </Box>
+
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          minHeight: '100vh',
+          bgcolor: 'background.default',
+          px: { xs: 2.5, sm: 4 },
+          py: { xs: 3, sm: 4 },
+        }}
+      >
+        <Stack
+          direction="row"
+          sx={{
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            mb: { xs: 3, md: 2 },
+          }}
+        >
+          <Box sx={{ display: { xs: 'flex', md: 'none' }, alignItems: 'center', gap: 1 }}>
+            <Box
+              sx={{
+                width: 34,
+                height: 34,
+                borderRadius: 1.5,
+                bgcolor: 'primary.main',
+                color: 'primary.contrastText',
+                display: 'grid',
+                placeItems: 'center',
+                fontWeight: 800,
+                fontSize: 11,
+              }}
             >
+              MBD
+            </Box>
+            <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
               {t('app.name')}
             </Typography>
-            <Typography variant="h4" component="h1">
-              {mode === 'login' ? t('auth.signIn') : t('auth.createAccount')}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {t('auth.subtitle')}
-            </Typography>
-          </Stack>
+          </Box>
+          <Box sx={{ marginInlineStart: 'auto' }}>
+            <LanguageSwitcher />
+          </Box>
+        </Stack>
 
-          <Stack spacing={2}>
-            <OAuthButtons disabled={busy} />
+        <Box
+          sx={{
+            flex: 1,
+            display: 'grid',
+            placeItems: 'center',
+            width: '100%',
+          }}
+        >
+          <Box sx={{ width: '100%', maxWidth: 420 }}>
+            <Stack spacing={0.75} sx={{ mb: 3.5 }}>
+              <Typography variant="h4" component="h1">
+                {mode === 'login' ? t('auth.signIn') : t('auth.createAccount')}
+              </Typography>
+              <Typography variant="body1" color="text.secondary">
+                {t('auth.subtitle')}
+              </Typography>
+            </Stack>
 
-            <Box
-              component="form"
-              noValidate
-              onSubmit={handleSubmit}
-              sx={{ display: 'grid', gap: 2 }}
-            >
-            {mode === 'register' && (
-              <TextField
-                label={t('auth.name')}
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-                required
-                autoComplete="name"
-                fullWidth
-              />
-            )}
-            <TextField
-              label={t('auth.email')}
-              type="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              required
-              autoComplete="email"
-              fullWidth
-            />
-            <TextField
-              label={t('auth.password')}
-              type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              required
-              helperText={t('auth.passwordHint')}
-              autoComplete={
-                mode === 'login' ? 'current-password' : 'new-password'
-              }
-              fullWidth
-            />
+            <Stack spacing={2.25}>
+              <OAuthButtons disabled={busy} />
 
-            {formError && (
-              <Alert severity="error" role="alert">
-                {formError}
-              </Alert>
-            )}
+              <Box
+                component="form"
+                noValidate
+                onSubmit={handleSubmit}
+                sx={{ display: 'grid', gap: 2 }}
+              >
+                {mode === 'register' && (
+                  <TextField
+                    label={t('auth.name')}
+                    value={name}
+                    onChange={(event) => setName(event.target.value)}
+                    required
+                    autoComplete="name"
+                    fullWidth
+                  />
+                )}
+                <TextField
+                  label={t('auth.email')}
+                  type="email"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  required
+                  autoComplete="email"
+                  fullWidth
+                />
+                <TextField
+                  label={t('auth.password')}
+                  type="password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  required
+                  helperText={t('auth.passwordHint')}
+                  autoComplete={
+                    mode === 'login' ? 'current-password' : 'new-password'
+                  }
+                  fullWidth
+                />
 
-            <Button type="submit" variant="contained" size="large" disabled={busy}>
-              {busy
-                ? t('common.pleaseWait')
-                : mode === 'login'
-                  ? t('auth.signIn')
-                  : t('auth.register')}
-            </Button>
-            </Box>
-          </Stack>
+                {formError && (
+                  <Alert severity="error" role="alert">
+                    {formError}
+                  </Alert>
+                )}
 
-          <Typography variant="body2" sx={{ mt: 2.5 }} color="text.secondary">
-            {mode === 'login' ? (
-              <>
-                {t('auth.noAccount')}{' '}
-                <Link
-                  component={RouterLink}
-                  to="/register"
-                  onClick={() => {
-                    setMode('register');
-                    setFormError(null);
-                  }}
+                <Button
+                  type="submit"
+                  variant="contained"
+                  size="large"
+                  disabled={busy}
+                  sx={{ mt: 0.5 }}
                 >
-                  {t('auth.register')}
-                </Link>
-              </>
-            ) : (
-              <>
-                {t('auth.alreadyRegistered')}{' '}
-                <Link
-                  component={RouterLink}
-                  to="/login"
-                  onClick={() => {
-                    setMode('login');
-                    setFormError(null);
-                  }}
-                >
-                  {t('auth.signIn')}
-                </Link>
-              </>
-            )}
-          </Typography>
-        </CardContent>
-      </Card>
+                  {busy
+                    ? t('common.pleaseWait')
+                    : mode === 'login'
+                      ? t('auth.signIn')
+                      : t('auth.register')}
+                </Button>
+              </Box>
+            </Stack>
+
+            <Typography variant="body2" sx={{ mt: 3 }} color="text.secondary">
+              {mode === 'login' ? (
+                <>
+                  {t('auth.noAccount')}{' '}
+                  <Link
+                    component={RouterLink}
+                    to="/register"
+                    onClick={() => {
+                      setMode('register');
+                      setFormError(null);
+                    }}
+                    sx={{ fontWeight: 600 }}
+                  >
+                    {t('auth.register')}
+                  </Link>
+                </>
+              ) : (
+                <>
+                  {t('auth.alreadyRegistered')}{' '}
+                  <Link
+                    component={RouterLink}
+                    to="/login"
+                    onClick={() => {
+                      setMode('login');
+                      setFormError(null);
+                    }}
+                    sx={{ fontWeight: 600 }}
+                  >
+                    {t('auth.signIn')}
+                  </Link>
+                </>
+              )}
+            </Typography>
+          </Box>
+        </Box>
+      </Box>
     </Box>
   );
 }

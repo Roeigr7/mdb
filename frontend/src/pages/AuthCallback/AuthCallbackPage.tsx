@@ -4,9 +4,15 @@ import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
+import { alpha } from '@mui/material/styles';
 import { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Link as RouterLink, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
+import {
+  Link as RouterLink,
+  Navigate,
+  useNavigate,
+  useSearchParams,
+} from 'react-router-dom';
 import { getErrorMessage } from '../../app/api/apiError';
 import { useExchangeOAuthCodeMutation } from '../../app/features/auth/authApi';
 import { establishSession } from '../../app/features/auth/establishSession';
@@ -46,25 +52,38 @@ export function AuthCallbackPage() {
     return <Navigate to="/dashboard" replace />;
   }
 
-  if (!code) {
-    return (
-      <Box sx={{ minHeight: '100vh', display: 'grid', placeItems: 'center', px: 2 }}>
-        <Stack spacing={2} sx={{ maxWidth: 420, width: '100%' }}>
-          <Alert severity="error">{t('auth.oauthInvalid')}</Alert>
-          <Button component={RouterLink} to="/login" variant="contained">
-            {t('auth.backToLogin')}
-          </Button>
-        </Stack>
-      </Box>
-    );
-  }
-
   return (
-    <Box sx={{ minHeight: '100vh', display: 'grid', placeItems: 'center', px: 2 }}>
-      <Stack spacing={2} sx={{ maxWidth: 420, width: '100%', textAlign: 'center' }}>
-        {error ? (
+    <Box
+      sx={{
+        minHeight: '100vh',
+        display: 'grid',
+        placeItems: 'center',
+        px: 2,
+        background: `
+          radial-gradient(ellipse 70% 50% at 20% 10%, ${alpha('#1a365d', 0.12)}, transparent),
+          #f3f6fb
+        `,
+      }}
+    >
+      <Stack
+        spacing={2.5}
+        sx={{
+          maxWidth: 420,
+          width: '100%',
+          textAlign: 'center',
+          p: 4,
+          borderRadius: 3,
+          bgcolor: 'background.paper',
+          border: '1px solid',
+          borderColor: 'divider',
+          boxShadow: 2,
+        }}
+      >
+        {!code || error ? (
           <>
-            <Alert severity="error">{error}</Alert>
+            <Alert severity="error">
+              {error ?? t('auth.oauthInvalid')}
+            </Alert>
             <Button component={RouterLink} to="/login" variant="contained">
               {t('auth.backToLogin')}
             </Button>
@@ -72,8 +91,9 @@ export function AuthCallbackPage() {
         ) : (
           <>
             <CircularProgress sx={{ mx: 'auto' }} />
-            <Typography variant="body1" color="text.secondary">
-              {isLoading ? t('auth.oauthCompleting') : t('common.pleaseWait')}
+            <Typography variant="h6">{t('auth.oauthCompleting')}</Typography>
+            <Typography variant="body2" color="text.secondary">
+              {isLoading ? t('common.pleaseWait') : t('common.pleaseWait')}
             </Typography>
           </>
         )}

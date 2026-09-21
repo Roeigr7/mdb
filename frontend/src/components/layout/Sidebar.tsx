@@ -19,34 +19,39 @@ import ListItemText from '@mui/material/ListItemText';
 import Toolbar from '@mui/material/Toolbar';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
+import { alpha } from '@mui/material/styles';
+import type { ReactNode } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
   DRAWER_WIDTH,
   DRAWER_WIDTH_COLLAPSED,
+  SIDEBAR_BG,
+  SIDEBAR_BG_ELEVATED,
 } from '../../app/theme';
-import { useAppTranslation } from '../../i18n/useAppTranslation';
 import type { AppTranslationKey } from '../../i18n/useAppTranslation';
+import { useAppTranslation } from '../../i18n/useAppTranslation';
 import { useLayout } from './LayoutContext';
 
-const mainNav: Array<{
+type NavItem = {
   labelKey: AppTranslationKey;
   path: string;
-  icon: React.ReactNode;
-}> = [
+  icon: ReactNode;
+};
+
+const generalNav: NavItem[] = [
   { labelKey: 'nav.dashboard', path: '/dashboard', icon: <DashboardRoundedIcon /> },
   { labelKey: 'nav.projects', path: '/projects', icon: <FolderRoundedIcon /> },
+  { labelKey: 'nav.reports', path: '/reports', icon: <InsightsRoundedIcon /> },
+];
+
+const managementNav: NavItem[] = [
   { labelKey: 'nav.materials', path: '/materials', icon: <Inventory2RoundedIcon /> },
   { labelKey: 'nav.suppliers', path: '/suppliers', icon: <LocalShippingRoundedIcon /> },
   { labelKey: 'nav.expenses', path: '/expenses', icon: <PaymentsRoundedIcon /> },
   { labelKey: 'nav.revenue', path: '/revenue', icon: <TrendingUpRoundedIcon /> },
-  { labelKey: 'nav.reports', path: '/reports', icon: <InsightsRoundedIcon /> },
 ];
 
-const secondaryNav: Array<{
-  labelKey: AppTranslationKey;
-  path: string;
-  icon: React.ReactNode;
-}> = [
+const systemNav: NavItem[] = [
   { labelKey: 'nav.settings', path: '/settings', icon: <SettingsRoundedIcon /> },
 ];
 
@@ -71,17 +76,18 @@ function BrandMark({ collapsed }: { collapsed: boolean }) {
     >
       <Box
         sx={{
-          width: 34,
-          height: 34,
-          borderRadius: 1.5,
-          bgcolor: 'primary.main',
-          color: 'primary.contrastText',
+          width: 36,
+          height: 36,
+          borderRadius: 2,
+          bgcolor: alpha('#fff', 0.12),
+          color: '#fff',
           display: 'grid',
           placeItems: 'center',
-          fontWeight: 700,
+          fontWeight: 800,
           fontSize: 12,
-          letterSpacing: 0.4,
+          letterSpacing: 0.5,
           flexShrink: 0,
+          border: `1px solid ${alpha('#fff', 0.16)}`,
         }}
       >
         MBD
@@ -91,11 +97,15 @@ function BrandMark({ collapsed }: { collapsed: boolean }) {
           <Typography
             variant="subtitle1"
             noWrap
-            sx={{ lineHeight: 1.2, fontWeight: 700 }}
+            sx={{ lineHeight: 1.2, fontWeight: 700, color: '#fff' }}
           >
             {t('app.name')}
           </Typography>
-          <Typography variant="caption" color="text.secondary" noWrap>
+          <Typography
+            variant="caption"
+            noWrap
+            sx={{ color: alpha('#fff', 0.55) }}
+          >
             {t('app.tagline')}
           </Typography>
         </Box>
@@ -105,15 +115,13 @@ function BrandMark({ collapsed }: { collapsed: boolean }) {
 }
 
 function NavSection({
+  titleKey,
   items,
   collapsed,
   onNavigate,
 }: {
-  items: Array<{
-    labelKey: AppTranslationKey;
-    path: string;
-    icon: React.ReactNode;
-  }>;
+  titleKey?: AppTranslationKey;
+  items: NavItem[];
   collapsed: boolean;
   onNavigate?: () => void;
 }) {
@@ -121,52 +129,88 @@ function NavSection({
   const location = useLocation();
 
   return (
-    <List sx={{ py: 1 }}>
-      {items.map((item) => {
-        const selected =
-          location.pathname === item.path ||
-          (item.path !== '/dashboard' &&
-            location.pathname.startsWith(item.path));
-        const label = t(item.labelKey);
+    <Box sx={{ mb: 1 }}>
+      {titleKey && !collapsed && (
+        <Typography
+          variant="overline"
+          sx={{
+            display: 'block',
+            px: 2.5,
+            pt: 1.5,
+            pb: 0.75,
+            color: alpha('#fff', 0.42),
+          }}
+        >
+          {t(titleKey)}
+        </Typography>
+      )}
+      <List sx={{ py: 0.25 }}>
+        {items.map((item) => {
+          const selected =
+            location.pathname === item.path ||
+            (item.path !== '/dashboard' &&
+              location.pathname.startsWith(item.path));
+          const label = t(item.labelKey);
 
-        const button = (
-          <ListItemButton
-            component={NavLink}
-            to={item.path}
-            selected={selected}
-            onClick={onNavigate}
-            sx={{
-              justifyContent: collapsed ? 'center' : 'flex-start',
-              px: collapsed ? 1 : 1.5,
-              mx: collapsed ? 1 : 1,
-            }}
-          >
-            <ListItemIcon
+          const button = (
+            <ListItemButton
+              component={NavLink}
+              to={item.path}
+              selected={selected}
+              onClick={onNavigate}
               sx={{
-                minWidth: collapsed ? 0 : 40,
-                justifyContent: 'center',
-                color: selected ? 'primary.main' : 'text.secondary',
+                justifyContent: collapsed ? 'center' : 'flex-start',
+                px: collapsed ? 1 : 1.5,
+                mx: 1.25,
+                color: selected ? '#fff' : alpha('#fff', 0.72),
+                bgcolor: selected ? alpha('#fff', 0.12) : 'transparent',
+                border: `1px solid ${selected ? alpha('#fff', 0.08) : 'transparent'}`,
+                '&:hover': {
+                  bgcolor: alpha('#fff', 0.08),
+                  color: '#fff',
+                },
+                '&.Mui-selected:hover': {
+                  bgcolor: alpha('#fff', 0.16),
+                },
               }}
             >
-              {item.icon}
-            </ListItemIcon>
-            {!collapsed && <ListItemText primary={label} />}
-          </ListItemButton>
-        );
+              <ListItemIcon
+                sx={{
+                  minWidth: collapsed ? 0 : 40,
+                  justifyContent: 'center',
+                  color: 'inherit',
+                }}
+              >
+                {item.icon}
+              </ListItemIcon>
+              {!collapsed && (
+                <ListItemText
+                  primary={label}
+                  sx={{
+                    '& .MuiListItemText-primary': {
+                      fontWeight: selected ? 650 : 500,
+                      fontSize: '0.9rem',
+                    },
+                  }}
+                />
+              )}
+            </ListItemButton>
+          );
 
-        return (
-          <ListItem key={item.path} disablePadding sx={{ mb: 0.25 }}>
-            {collapsed ? (
-              <Tooltip title={label} placement="right">
-                {button}
-              </Tooltip>
-            ) : (
-              button
-            )}
-          </ListItem>
-        );
-      })}
-    </List>
+          return (
+            <ListItem key={item.path} disablePadding sx={{ mb: 0.35 }}>
+              {collapsed ? (
+                <Tooltip title={label} placement="right">
+                  {button}
+                </Tooltip>
+              ) : (
+                button
+              )}
+            </ListItem>
+          );
+        })}
+      </List>
+    </Box>
   );
 }
 
@@ -183,12 +227,24 @@ function SidebarContent({
   const { toggleSidebarCollapsed } = useLayout();
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+        bgcolor: SIDEBAR_BG,
+        backgroundImage: `
+          radial-gradient(ellipse 120% 80% at 0% 0%, ${alpha('#2b4c7e', 0.45)}, transparent 55%),
+          linear-gradient(180deg, ${SIDEBAR_BG_ELEVATED} 0%, ${SIDEBAR_BG} 42%)
+        `,
+        color: '#fff',
+      }}
+    >
       <Toolbar
         sx={{
           px: collapsed ? 1 : 2,
           gap: 1,
-          minHeight: { xs: 64 },
+          minHeight: { xs: 72 },
           justifyContent: collapsed ? 'center' : 'space-between',
         }}
       >
@@ -198,36 +254,46 @@ function SidebarContent({
             size="small"
             onClick={toggleSidebarCollapsed}
             aria-label={t('header.collapseNav')}
+            sx={{ color: alpha('#fff', 0.7), '&:hover': { color: '#fff' } }}
           >
             <MenuOpenRoundedIcon fontSize="small" />
           </IconButton>
         )}
       </Toolbar>
 
-      <Divider />
+      <Divider sx={{ borderColor: alpha('#fff', 0.08) }} />
 
-      <Box sx={{ flex: 1, overflowY: 'auto', py: 0.5 }}>
+      <Box sx={{ flex: 1, overflowY: 'auto', py: 1 }}>
         <NavSection
-          items={mainNav}
+          titleKey="nav.sectionGeneral"
+          items={generalNav}
           collapsed={collapsed}
           onNavigate={onNavigate}
         />
-        <Divider sx={{ mx: 2, my: 0.5 }} />
         <NavSection
-          items={secondaryNav}
+          titleKey="nav.sectionManagement"
+          items={managementNav}
+          collapsed={collapsed}
+          onNavigate={onNavigate}
+        />
+        <Divider sx={{ mx: 2.5, my: 1, borderColor: alpha('#fff', 0.08) }} />
+        <NavSection
+          titleKey="nav.sectionSystem"
+          items={systemNav}
           collapsed={collapsed}
           onNavigate={onNavigate}
         />
       </Box>
 
       {showCollapseToggle && collapsed && (
-        <Box sx={{ p: 1, display: 'grid', placeItems: 'center' }}>
+        <Box sx={{ p: 1.25, display: 'grid', placeItems: 'center' }}>
           <Tooltip title={t('header.expandNav')} placement="right">
             <IconButton
               size="small"
               onClick={toggleSidebarCollapsed}
               aria-label={t('header.expandNav')}
               sx={{
+                color: alpha('#fff', 0.7),
                 transform: (theme) =>
                   theme.direction === 'rtl' ? 'none' : 'scaleX(-1)',
               }}
@@ -265,6 +331,8 @@ export function Sidebar({ mobileOpen, onClose }: SidebarProps) {
           '& .MuiDrawer-paper': {
             boxSizing: 'border-box',
             width: DRAWER_WIDTH,
+            bgcolor: SIDEBAR_BG,
+            border: 'none',
           },
         }}
       >
@@ -281,6 +349,8 @@ export function Sidebar({ mobileOpen, onClose }: SidebarProps) {
             boxSizing: 'border-box',
             width: desktopWidth,
             overflowX: 'hidden',
+            bgcolor: SIDEBAR_BG,
+            border: 'none',
             transition: (theme) =>
               theme.transitions.create('width', {
                 easing: theme.transitions.easing.sharp,

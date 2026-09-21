@@ -52,7 +52,15 @@ export function OAuthButtons({ disabled = false }: OAuthButtonsProps) {
           disabled={disabled || !base}
           startIcon={<GoogleIcon />}
           href={`${base}/auth/google`}
-          sx={{ justifyContent: 'center' }}
+          sx={{
+            justifyContent: 'center',
+            bgcolor: 'background.paper',
+            borderColor: 'divider',
+            '&:hover': {
+              borderColor: 'primary.main',
+              bgcolor: 'rgba(26, 54, 93, 0.04)',
+            },
+          }}
         >
           {t('auth.continueGoogle')}
         </Button>
@@ -65,7 +73,15 @@ export function OAuthButtons({ disabled = false }: OAuthButtonsProps) {
           disabled={disabled || !base}
           startIcon={<FacebookIcon />}
           href={`${base}/auth/facebook`}
-          sx={{ justifyContent: 'center' }}
+          sx={{
+            justifyContent: 'center',
+            bgcolor: 'background.paper',
+            borderColor: 'divider',
+            '&:hover': {
+              borderColor: 'primary.main',
+              bgcolor: 'rgba(26, 54, 93, 0.04)',
+            },
+          }}
         >
           {t('auth.continueFacebook')}
         </Button>

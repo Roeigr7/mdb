@@ -22,6 +22,9 @@ export const en: typeof he = {
     reports: 'Reports',
     suppliers: 'Suppliers',
     settings: 'Settings',
+    sectionGeneral: 'General',
+    sectionManagement: 'Management',
+    sectionSystem: 'System',
   },
   header: {
     openNav: 'Open navigation',
@@ -69,6 +72,11 @@ export const en: typeof he = {
     register: 'Register',
     createAccount: 'Create account',
     subtitle: 'Internal operations dashboard for projects and profitability.',
+    heroLine: 'Projects, expenses and revenue — in one place.',
+    heroSupport:
+      'A professional dashboard for metals and construction teams — clear, precise, and ready for daily work.',
+    heroFootnoteLabel: 'M.B.D. Metals',
+    heroFootnote: 'Operations · Profitability · Full data control',
     name: 'Name',
     email: 'Email',
     password: 'Password',
@@ -98,6 +106,10 @@ export const en: typeof he = {
   dashboard: {
     title: 'Overview',
     subtitle: 'Track projects and operational performance for M.B.D. Metals.',
+    welcomeEyebrow: 'Welcome back',
+    welcomeTitle: 'Hello, {{name}}',
+    welcomeBody:
+      'Here is a live snapshot of your revenue, expenses, and projects.',
     loadError: 'Failed to load dashboard data',
     totalProjects: 'Total Projects',
     projectsHint: 'From your project list',

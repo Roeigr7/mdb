@@ -19,14 +19,16 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
-import { useTheme } from '@mui/material/styles';
+import { alpha, useTheme } from '@mui/material/styles';
 import { BarChart } from '@mui/x-charts/BarChart';
 import { LineChart } from '@mui/x-charts/LineChart';
 import { PieChart } from '@mui/x-charts/PieChart';
 import { useMemo } from 'react';
+import { useSelector } from 'react-redux';
 import { Link as RouterLink } from 'react-router-dom';
 import { getErrorMessage } from '../../app/api/apiError';
 import { useGetAnalyticsQuery } from '../../app/features/analytics/analyticsApi';
+import { selectCurrentUser } from '../../app/features/auth/authSlice';
 import { useGetProjectsQuery } from '../../app/features/projects/projectsApi';
 import { ChartCard, DashboardSkeleton } from '../../components/ui/ChartCard';
 import { PageHeader } from '../../components/ui/PageHeader';
@@ -49,6 +51,7 @@ function formatMonthLabel(month: string, locale: string) {
 export function DashboardPage() {
   const { t, i18n } = useAppTranslation();
   const theme = useTheme();
+  const user = useSelector(selectCurrentUser);
 
   const {
     data: projectsData,
@@ -177,19 +180,83 @@ export function DashboardPage() {
 
   return (
     <Stack spacing={3}>
+      <Card
+        sx={{
+          border: 'none',
+          background: `
+            radial-gradient(ellipse 80% 120% at 100% 0%, ${alpha(theme.palette.primary.light, 0.28)}, transparent 55%),
+            linear-gradient(120deg, #0b1f3a 0%, #1a365d 55%, #243f66 100%)
+          `,
+          color: '#fff',
+          boxShadow: '0 8px 28px rgba(15, 23, 42, 0.12)',
+          '&:hover': {
+            borderColor: 'transparent',
+            boxShadow: '0 10px 32px rgba(15, 23, 42, 0.16)',
+          },
+        }}
+      >
+        <Box
+          sx={{
+            p: { xs: 2.5, sm: 3.5 },
+            display: 'flex',
+            flexDirection: { xs: 'column', sm: 'row' },
+            alignItems: { sm: 'center' },
+            justifyContent: 'space-between',
+            gap: 2.5,
+          }}
+        >
+          <Box sx={{ maxWidth: 560 }}>
+            <Typography variant="overline" sx={{ color: alpha('#fff', 0.55) }}>
+              {t('dashboard.welcomeEyebrow')}
+            </Typography>
+            <Typography
+              variant="h4"
+              sx={{ fontWeight: 800, letterSpacing: '-0.02em', mb: 0.75 }}
+            >
+              {t('dashboard.welcomeTitle', {
+                name: user?.name?.trim() || user?.email || t('app.name'),
+              })}
+            </Typography>
+            <Typography variant="body1" sx={{ color: alpha('#fff', 0.72) }}>
+              {t('dashboard.welcomeBody')}
+            </Typography>
+          </Box>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.25}>
+            <Button
+              component={RouterLink}
+              to="/projects"
+              variant="contained"
+              startIcon={<AddRoundedIcon />}
+              sx={{
+                bgcolor: '#fff',
+                color: 'primary.main',
+                '&:hover': { bgcolor: alpha('#fff', 0.92) },
+              }}
+            >
+              {t('projects.create')}
+            </Button>
+            <Button
+              component={RouterLink}
+              to="/reports"
+              variant="outlined"
+              sx={{
+                borderColor: alpha('#fff', 0.35),
+                color: '#fff',
+                '&:hover': {
+                  borderColor: alpha('#fff', 0.55),
+                  bgcolor: alpha('#fff', 0.08),
+                },
+              }}
+            >
+              {t('nav.reports')}
+            </Button>
+          </Stack>
+        </Box>
+      </Card>
+
       <PageHeader
         title={t('dashboard.title')}
         subtitle={t('dashboard.subtitle')}
-        actions={
-          <Button
-            component={RouterLink}
-            to="/projects"
-            variant="contained"
-            startIcon={<AddRoundedIcon />}
-          >
-            {t('dashboard.viewProjects')}
-          </Button>
-        }
       />
 
       <Grid container spacing={2.5}>
@@ -199,6 +266,7 @@ export function DashboardPage() {
             value={formatMoney(summary?.totalRevenue ?? 0, i18n.language)}
             icon={<TrendingUpRoundedIcon />}
             accent={theme.palette.success.main}
+            sparkline={revenueSeries}
             trend={
               revenueTrend == null
                 ? null
@@ -216,6 +284,7 @@ export function DashboardPage() {
             value={formatMoney(summary?.totalExpenses ?? 0, i18n.language)}
             icon={<PaymentsRoundedIcon />}
             accent={theme.palette.error.main}
+            sparkline={expenseSeries}
             trend={
               expensesTrend == null
                 ? null
@@ -237,6 +306,7 @@ export function DashboardPage() {
                 ? theme.palette.success.main
                 : theme.palette.error.main
             }
+            sparkline={profitSeries}
             trend={
               profitTrend == null
                 ? null
