@@ -12,5 +12,11 @@ export default defineConfig({
     fileParallelism: false,
     hookTimeout: 60_000,
     testTimeout: 30_000,
+    // Deterministic scan stubs — do not require Ollama in CI/E2E.
+    env: {
+      DOCUMENT_AI_PROVIDER: 'mock',
+      OCR_PROVIDER: 'mock',
+      EXTRACTION_PROVIDER: 'mock',
+    },
   },
 });

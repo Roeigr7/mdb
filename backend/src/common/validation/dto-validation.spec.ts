@@ -5,6 +5,13 @@ import { RegisterDto } from '../../auth/dto/register.dto.js';
 import { CreateProjectDto } from '../../projects/dto/create-project.dto.js';
 import { GetProjectsDto } from '../../projects/dto/get-projects.dto.js';
 import { GetUsersDto } from '../../users/dto/get-users.dto.js';
+import { CreateMaterialDto } from '../../materials/dto/create-material.dto.js';
+import { UpdateMaterialDto } from '../../materials/dto/update-material.dto.js';
+import { CreateExpenseDto } from '../../expenses/dto/create-expense.dto.js';
+import { UpdateExpenseDto } from '../../expenses/dto/update-expense.dto.js';
+import { CreateRevenueDto } from '../../revenue/dto/create-revenue.dto.js';
+import { UpdateRevenueDto } from '../../revenue/dto/update-revenue.dto.js';
+import { RevenueStatus } from '../../generated/prisma/client.js';
 
 const pipe = new ValidationPipe({
   whitelist: true,
@@ -158,6 +165,215 @@ describe('DTO validation (ValidationPipe)', () => {
           },
           CreateProjectDto,
         ),
+      ).rejects.toThrow();
+    });
+  });
+
+  describe('CreateMaterialDto', () => {
+    it('accepts a valid payload and trims name', async () => {
+      await expect(
+        transform(
+          {
+            name: '  ברזל  ',
+            quantity: 500,
+            unitPrice: 12,
+            supplier: ' ספק א ',
+          },
+          CreateMaterialDto,
+        ),
+      ).resolves.toEqual({
+        name: 'ברזל',
+        quantity: 500,
+        unitPrice: 12,
+        supplier: 'ספק א',
+      });
+    });
+
+    it('rejects an empty name', async () => {
+      await expect(
+        transform(
+          { name: '   ', quantity: 1, unitPrice: 1 },
+          CreateMaterialDto,
+        ),
+      ).rejects.toThrow();
+    });
+
+    it('rejects quantity that is not greater than 0', async () => {
+      await expect(
+        transform(
+          { name: 'ברזל', quantity: 0, unitPrice: 12 },
+          CreateMaterialDto,
+        ),
+      ).rejects.toThrow();
+    });
+
+    it('rejects a negative unit price', async () => {
+      await expect(
+        transform(
+          { name: 'ברזל', quantity: 1, unitPrice: -1 },
+          CreateMaterialDto,
+        ),
+      ).rejects.toThrow();
+    });
+
+    it('accepts a zero unit price and omits supplier', async () => {
+      await expect(
+        transform({ name: 'ברזל', quantity: 2, unitPrice: 0 }, CreateMaterialDto),
+      ).resolves.toEqual({
+        name: 'ברזל',
+        quantity: 2,
+        unitPrice: 0,
+      });
+    });
+
+    it('rejects a client-supplied projectId', async () => {
+      await expect(
+        transform(
+          {
+            name: 'ברזל',
+            quantity: 1,
+            unitPrice: 1,
+            projectId: 99,
+          },
+          CreateMaterialDto,
+        ),
+      ).rejects.toThrow();
+    });
+  });
+
+  describe('UpdateMaterialDto', () => {
+    it('rejects a non-positive quantity', async () => {
+      await expect(
+        transform({ quantity: -5 }, UpdateMaterialDto),
+      ).rejects.toThrow();
+    });
+  });
+
+  describe('CreateExpenseDto', () => {
+    it('accepts a valid payload and trims fields', async () => {
+      await expect(
+        transform(
+          {
+            description: '  חומרי גלם  ',
+            category: ' Materials ',
+            amount: 2500,
+            date: '2026-09-18T00:00:00.000Z',
+          },
+          CreateExpenseDto,
+        ),
+      ).resolves.toEqual({
+        description: 'חומרי גלם',
+        category: 'Materials',
+        amount: 2500,
+        date: '2026-09-18T00:00:00.000Z',
+      });
+    });
+
+    it('rejects a non-positive amount', async () => {
+      await expect(
+        transform(
+          {
+            description: 'X',
+            amount: 0,
+            date: '2026-09-18T00:00:00.000Z',
+          },
+          CreateExpenseDto,
+        ),
+      ).rejects.toThrow();
+    });
+
+    it('rejects an invalid date', async () => {
+      await expect(
+        transform(
+          {
+            description: 'X',
+            amount: 10,
+            date: 'not-a-date',
+          },
+          CreateExpenseDto,
+        ),
+      ).rejects.toThrow();
+    });
+
+    it('rejects a client-supplied projectId', async () => {
+      await expect(
+        transform(
+          {
+            description: 'X',
+            amount: 10,
+            date: '2026-09-18T00:00:00.000Z',
+            projectId: 99,
+          },
+          CreateExpenseDto,
+        ),
+      ).rejects.toThrow();
+    });
+  });
+
+  describe('UpdateExpenseDto', () => {
+    it('rejects a non-positive amount', async () => {
+      await expect(
+        transform({ amount: -1 }, UpdateExpenseDto),
+      ).rejects.toThrow();
+    });
+  });
+
+  describe('CreateRevenueDto', () => {
+    it('accepts a valid payload and trims fields', async () => {
+      await expect(
+        transform(
+          {
+            description: '  תשלום  ',
+            customer: ' לאסם ',
+            amount: 8500,
+            date: '2026-09-18T00:00:00.000Z',
+            status: RevenueStatus.PAID,
+          },
+          CreateRevenueDto,
+        ),
+      ).resolves.toEqual({
+        description: 'תשלום',
+        customer: 'לאסם',
+        amount: 8500,
+        date: '2026-09-18T00:00:00.000Z',
+        status: RevenueStatus.PAID,
+      });
+    });
+
+    it('rejects an invalid status', async () => {
+      await expect(
+        transform(
+          {
+            description: 'X',
+            amount: 10,
+            date: '2026-09-18T00:00:00.000Z',
+            status: 'DONE',
+          },
+          CreateRevenueDto,
+        ),
+      ).rejects.toThrow();
+    });
+
+    it('rejects a client-supplied projectId', async () => {
+      await expect(
+        transform(
+          {
+            description: 'X',
+            amount: 10,
+            date: '2026-09-18T00:00:00.000Z',
+            status: RevenueStatus.PENDING,
+            projectId: 99,
+          },
+          CreateRevenueDto,
+        ),
+      ).rejects.toThrow();
+    });
+  });
+
+  describe('UpdateRevenueDto', () => {
+    it('rejects an invalid status', async () => {
+      await expect(
+        transform({ status: 'DONE' }, UpdateRevenueDto),
       ).rejects.toThrow();
     });
   });

@@ -1,0 +1,78 @@
+name: CD
+
+# Production deployment workflow (structure only — no cloud provider yet).
+# Separated from CI so pull requests and feature branches never deploy.
+
+on:
+  # Deploy only after CI succeeds on main
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  # Allow manual runs from the Actions UI (after environment protection is set)
+  workflow_dispatch:
+
+concurrency:
+  group: cd-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: deploy-production
+    runs-on: ubuntu-latest
+    # Only proceed when CI succeeded, or when manually dispatched
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'workflow_run' &&
+       github.event.workflow_run.conclusion == 'success')
+
+    # GitHub Environment: configure secrets/variables and optional reviewers under
+    # Settings → Environments → production
+    environment:
+      name: production
+
+    defaults:
+      run:
+        working-directory: backend
+
+    # Production secrets MUST come from the GitHub Environment / secret manager.
+    # Do NOT hardcode DATABASE_URL, JWT_SECRET, or other secrets here.
+    # Expected Environment secrets/variables (set later when hosting is chosen):
+    #   DATABASE_URL
+    #   JWT_SECRET
+    #   JWT_ACCESS_EXPIRES_IN
+    #   JWT_REFRESH_EXPIRES_IN
+    # Never use localhost, mbd_dashboard_test, or the development database.
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # For workflow_run, check out the commit that CI validated
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Use npm 11
+        working-directory: .
+        run: npm install -g npm@11
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Production build
+        run: npm run build
+
+      - name: Deploy to production
+        run: |
+          echo "::notice::CD is prepared but not connected to a hosting provider yet."
+          echo "TODO: Add the provider-specific deploy step (Render / Railway / AWS / Fly / etc.)."
+          echo "TODO: Inject production secrets from GitHub Environment 'production'."
+          echo "TODO: Run prisma migrate deploy against the PRODUCTION database only."
+          echo "Refusing to deploy until a provider and secrets are configured."
+          exit 0

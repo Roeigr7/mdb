@@ -9,5 +9,11 @@ export default defineConfig({
     globals: true,
     root: './',
     include: ['**/*.spec.ts'],
+    // Keep document AI on mocks so unit tests never require a live Ollama.
+    env: {
+      DOCUMENT_AI_PROVIDER: 'mock',
+      OCR_PROVIDER: 'mock',
+      EXTRACTION_PROVIDER: 'mock',
+    },
   },
 });

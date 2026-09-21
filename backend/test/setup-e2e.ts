@@ -33,3 +33,10 @@ if (!process.env.JWT_SECRET) {
 
 process.env.JWT_ACCESS_EXPIRES_IN ??= '15m';
 process.env.JWT_REFRESH_EXPIRES_IN ??= '7d';
+
+// Keep OAuth disabled in E2E so provider/503 tests stay deterministic.
+// Real Google/Facebook credentials belong in local `start:dev`, not this suite.
+process.env.GOOGLE_CLIENT_ID = '';
+process.env.GOOGLE_CLIENT_SECRET = '';
+process.env.FACEBOOK_APP_ID = '';
+process.env.FACEBOOK_APP_SECRET = '';

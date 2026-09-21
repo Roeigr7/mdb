@@ -1,16 +1,18 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import bcrypt from 'bcrypt';
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import type { StringValue } from 'ms';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { LoginDto } from './dto/login.dto.js';
 import { RegisterDto } from './dto/register.dto.js';
 import type { JwtPayload } from './types/jwt-payload.js';
+import type { OAuthProfileInput } from './types/oauth-profile.js';
 import type { RefreshTokenPayload } from './types/refresh-token-payload.js';
 
 type TokenUser = {
@@ -25,6 +27,8 @@ type CreatedRefreshToken = {
   tokenHash: string;
   expiresAt: Date;
 };
+
+const OAUTH_EXCHANGE_TTL_MS = 2 * 60 * 1000;
 
 @Injectable()
 export class AuthService {
@@ -64,7 +68,7 @@ export class AuthService {
       where: { email: dto.email },
     });
 
-    if (!user) {
+    if (!user || !user.passwordHash) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
@@ -82,6 +86,28 @@ export class AuthService {
       email: user.email,
       role: user.role,
     });
+  }
+
+  /**
+   * Best-effort session revoke: delete the refresh-token row when the JWT is
+   * valid. Always succeeds so clients can clear local state safely.
+   */
+  async logout(refreshToken: string) {
+    try {
+      const payload = await this.jwtService.verifyAsync<RefreshTokenPayload>(
+        refreshToken,
+      );
+
+      if (payload.type === 'refresh' && payload.jti) {
+        await this.prisma.refreshToken.deleteMany({
+          where: { jti: payload.jti },
+        });
+      }
+    } catch {
+      // Invalid/expired tokens are treated as already logged out.
+    }
+
+    return { message: 'Logged out successfully' };
   }
 
   async refresh(refreshToken: string) {
@@ -156,6 +182,128 @@ export class AuthService {
       accessToken,
       refreshToken: nextRefreshToken.refreshToken,
     };
+  }
+
+  /**
+   * Find or create a user from a verified OAuth provider profile,
+   * then return a short-lived one-time exchange code (not JWT).
+   */
+  async loginWithOAuthProfile(profile: OAuthProfileInput): Promise<string> {
+    const user = await this.resolveOAuthUser(profile);
+    return this.createOAuthExchangeCode(user.id);
+  }
+
+  async exchangeOAuthCode(code: string) {
+    const codeHash = this.hashOAuthExchangeCode(code);
+    const stored = await this.prisma.oAuthExchangeCode.findUnique({
+      where: { codeHash },
+      include: { user: true },
+    });
+
+    if (!stored || stored.usedAt || stored.expiresAt.getTime() <= Date.now()) {
+      if (stored && !stored.usedAt) {
+        await this.prisma.oAuthExchangeCode.delete({ where: { id: stored.id } });
+      }
+      throw new UnauthorizedException('Invalid or expired OAuth code');
+    }
+
+    await this.prisma.oAuthExchangeCode.update({
+      where: { id: stored.id },
+      data: { usedAt: new Date() },
+    });
+
+    return this.issueTokenPair({
+      id: stored.user.id,
+      email: stored.user.email,
+      role: stored.user.role,
+    });
+  }
+
+  async resolveOAuthUser(profile: OAuthProfileInput) {
+    const email = profile.email.trim().toLowerCase();
+    if (!email || !email.includes('@')) {
+      throw new BadRequestException(
+        'OAuth provider did not return a usable email address',
+      );
+    }
+
+    if (!profile.emailVerified) {
+      throw new BadRequestException(
+        'OAuth provider email is not verified. Use a verified account.',
+      );
+    }
+
+    if (!profile.providerUserId?.trim()) {
+      throw new BadRequestException('Invalid OAuth provider response');
+    }
+
+    const providerIdField =
+      profile.provider === 'google' ? 'googleId' : 'facebookId';
+
+    const byProvider = await this.prisma.user.findUnique({
+      where: { [providerIdField]: profile.providerUserId } as
+        | { googleId: string }
+        | { facebookId: string },
+    });
+
+    if (byProvider) {
+      return byProvider;
+    }
+
+    const byEmail = await this.prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (byEmail) {
+      const existingProviderId =
+        profile.provider === 'google' ? byEmail.googleId : byEmail.facebookId;
+
+      if (existingProviderId && existingProviderId !== profile.providerUserId) {
+        throw new ConflictException(
+          'This email is already linked to a different OAuth account',
+        );
+      }
+
+      return this.prisma.user.update({
+        where: { id: byEmail.id },
+        data: {
+          [providerIdField]: profile.providerUserId,
+          ...(byEmail.name?.trim()
+            ? {}
+            : { name: profile.name.trim() || email }),
+        },
+      });
+    }
+
+    const name = profile.name.trim() || email.split('@')[0] || 'User';
+
+    return this.prisma.user.create({
+      data: {
+        name,
+        email,
+        passwordHash: null,
+        [providerIdField]: profile.providerUserId,
+      },
+    });
+  }
+
+  private async createOAuthExchangeCode(userId: number): Promise<string> {
+    const code = randomUUID();
+    const codeHash = this.hashOAuthExchangeCode(code);
+
+    await this.prisma.oAuthExchangeCode.create({
+      data: {
+        codeHash,
+        userId,
+        expiresAt: new Date(Date.now() + OAUTH_EXCHANGE_TTL_MS),
+      },
+    });
+
+    return code;
+  }
+
+  private hashOAuthExchangeCode(code: string): string {
+    return createHash('sha256').update(code).digest('hex');
   }
 
   private async issueTokenPair(user: TokenUser) {

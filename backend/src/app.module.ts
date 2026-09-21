@@ -1,23 +1,30 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
-import { createObserveModule } from '@nestjs/observe';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { AnalyticsModule } from './analytics/analytics.module.js';
 import { AuthModule } from './auth/auth.module.js';
+import { DocumentsModule } from './documents/documents.module.js';
+import { ExpensesModule } from './expenses/expenses.module.js';
+import { MaterialsModule } from './materials/materials.module.js';
+import { isObserveEnabled, ObserveModule } from './observe.js';
 import { ProjectsModule } from './projects/projects.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
+import { RevenueModule } from './revenue/revenue.module.js';
 import { UsersModule } from './users/users.module.js';
 
-export const { ObserveModule, ObserveInstrument } = createObserveModule();
+const observeImports = isObserveEnabled()
+  ? [
+      ObserveModule.forRoot({
+        appKey: process.env.OBSERVE_APP_KEY!,
+        appSecret: process.env.OBSERVE_APP_SECRET!,
+        serviceId: process.env.OBSERVE_SERVICE_ID?.trim() || 'backend',
+      }),
+    ]
+  : [];
 
 @Module({
   imports: [
-    // Distributed tracing, auto-correlated logs, request/job metrics, error
-    // telemetry, alarms, and more — out of the box. Sign up at https://observe.nestjs.com
-    ObserveModule.forRoot({
-      appKey: 'YOUR_APP_KEY',
-      appSecret: 'YOUR_APP_SECRET',
-      serviceId: 'backend',
-    }),
+    ...observeImports,
     ThrottlerModule.forRoot([
       {
         ttl: 60_000,
@@ -25,7 +32,12 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
       },
     ]),
     PrismaModule,
+    AnalyticsModule,
     ProjectsModule,
+    MaterialsModule,
+    DocumentsModule,
+    ExpensesModule,
+    RevenueModule,
     AuthModule,
     UsersModule,
   ],

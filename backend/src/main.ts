@@ -5,9 +5,25 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module.js';
 import { GlobalHttpExceptionFilter } from './common/filters/global-http-exception.filter.js';
 import { PrismaExceptionFilter } from './common/filters/prisma-exception.filter.js';
+import { validateEnv } from './config/env.validation.js';
+import { isObserveEnabled, ObserveInstrument } from './observe.js';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  validateEnv();
+
+  const app = await NestFactory.create(
+    AppModule,
+    isObserveEnabled() ? { instrument: ObserveInstrument } : undefined,
+  );
+
+  // Local frontend (Vite) → NestJS. Override with CORS_ORIGIN (comma-separated) if needed.
+  const corsOrigins = (process.env.CORS_ORIGIN ?? 'http://localhost:5173')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+  app.enableCors({
+    origin: corsOrigins,
+  });
 
   app.useGlobalPipes(
     new ValidationPipe({

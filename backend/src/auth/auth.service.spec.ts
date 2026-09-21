@@ -23,10 +23,18 @@ describe('AuthService', () => {
     user: {
       findUnique: ReturnType<typeof vi.fn>;
       create: ReturnType<typeof vi.fn>;
+      update: ReturnType<typeof vi.fn>;
     };
     refreshToken: {
       create: ReturnType<typeof vi.fn>;
       findUnique: ReturnType<typeof vi.fn>;
+      delete: ReturnType<typeof vi.fn>;
+      deleteMany: ReturnType<typeof vi.fn>;
+    };
+    oAuthExchangeCode: {
+      create: ReturnType<typeof vi.fn>;
+      findUnique: ReturnType<typeof vi.fn>;
+      update: ReturnType<typeof vi.fn>;
       delete: ReturnType<typeof vi.fn>;
     };
     $transaction: ReturnType<typeof vi.fn>;
@@ -53,10 +61,18 @@ describe('AuthService', () => {
       user: {
         findUnique: vi.fn(),
         create: vi.fn(),
+        update: vi.fn(),
       },
       refreshToken: {
         create: vi.fn(),
         findUnique: vi.fn(),
+        delete: vi.fn(),
+        deleteMany: vi.fn(),
+      },
+      oAuthExchangeCode: {
+        create: vi.fn(),
+        findUnique: vi.fn(),
+        update: vi.fn(),
         delete: vi.fn(),
       },
       $transaction: vi.fn(),
@@ -150,6 +166,23 @@ describe('AuthService', () => {
       expect(jwtService.signAsync).not.toHaveBeenCalled();
     });
 
+    it('throws UnauthorizedException for OAuth-only users without a password', async () => {
+      prisma.user.findUnique.mockResolvedValue({
+        ...mockUser,
+        passwordHash: null,
+        googleId: 'google-123',
+      });
+
+      await expect(
+        service.login({
+          email: mockUser.email,
+          password: 'any-password',
+        }),
+      ).rejects.toBeInstanceOf(UnauthorizedException);
+
+      expect(bcrypt.compare).not.toHaveBeenCalled();
+    });
+
     it('does not return passwordHash in the response', async () => {
       prisma.user.findUnique.mockResolvedValue(mockUser);
       vi.mocked(bcrypt.compare).mockResolvedValue(true as never);
@@ -237,6 +270,46 @@ describe('AuthService', () => {
       prisma.user.create.mockRejectedValue(prismaError);
 
       await expect(service.register(registerDto)).rejects.toBe(prismaError);
+    });
+  });
+
+  describe('logout', () => {
+    it('deletes the refresh token row when the token is valid', async () => {
+      jwtService.verifyAsync.mockResolvedValue({
+        sub: mockUser.id,
+        type: 'refresh',
+        jti: 'token-jti',
+      });
+      prisma.refreshToken.deleteMany.mockResolvedValue({ count: 1 });
+
+      await expect(service.logout('valid-refresh-token')).resolves.toEqual({
+        message: 'Logged out successfully',
+      });
+      expect(prisma.refreshToken.deleteMany).toHaveBeenCalledWith({
+        where: { jti: 'token-jti' },
+      });
+    });
+
+    it('succeeds without deleting when the refresh token is invalid', async () => {
+      jwtService.verifyAsync.mockRejectedValue(new Error('jwt expired'));
+
+      await expect(service.logout('bad-token')).resolves.toEqual({
+        message: 'Logged out successfully',
+      });
+      expect(prisma.refreshToken.deleteMany).not.toHaveBeenCalled();
+    });
+
+    it('succeeds without deleting when payload is not a refresh token', async () => {
+      jwtService.verifyAsync.mockResolvedValue({
+        sub: mockUser.id,
+        email: mockUser.email,
+        role: mockUser.role,
+      });
+
+      await expect(service.logout('access-token')).resolves.toEqual({
+        message: 'Logged out successfully',
+      });
+      expect(prisma.refreshToken.deleteMany).not.toHaveBeenCalled();
     });
   });
 
@@ -384,6 +457,162 @@ describe('AuthService', () => {
       prisma.$transaction.mockRejectedValue(txError);
 
       await expect(service.refresh(refreshToken)).rejects.toBe(txError);
+    });
+  });
+
+  describe('OAuth', () => {
+    const googleProfile = {
+      provider: 'google' as const,
+      providerUserId: 'google-abc',
+      email: 'roei@example.com',
+      emailVerified: true,
+      name: 'Roei',
+    };
+
+    it('creates a new OAuth user and returns an exchange code', async () => {
+      prisma.user.findUnique
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(null);
+      prisma.user.create.mockResolvedValue({
+        ...mockUser,
+        passwordHash: null,
+        googleId: 'google-abc',
+      });
+      prisma.oAuthExchangeCode.create.mockResolvedValue({ id: 1 });
+
+      const code = await service.loginWithOAuthProfile(googleProfile);
+
+      expect(typeof code).toBe('string');
+      expect(code.length).toBeGreaterThan(10);
+      expect(prisma.user.create).toHaveBeenCalledWith({
+        data: {
+          name: 'Roei',
+          email: 'roei@example.com',
+          passwordHash: null,
+          googleId: 'google-abc',
+        },
+      });
+      expect(prisma.oAuthExchangeCode.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            userId: mockUser.id,
+          }),
+        }),
+      );
+    });
+
+    it('logs in an existing Google user without creating a duplicate', async () => {
+      prisma.user.findUnique.mockResolvedValueOnce({
+        ...mockUser,
+        googleId: 'google-abc',
+      });
+      prisma.oAuthExchangeCode.create.mockResolvedValue({ id: 1 });
+
+      await service.loginWithOAuthProfile(googleProfile);
+
+      expect(prisma.user.create).not.toHaveBeenCalled();
+      expect(prisma.user.update).not.toHaveBeenCalled();
+    });
+
+    it('links Google to an existing email/password account', async () => {
+      prisma.user.findUnique
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce({ ...mockUser, googleId: null });
+      prisma.user.update.mockResolvedValue({
+        ...mockUser,
+        googleId: 'google-abc',
+      });
+      prisma.oAuthExchangeCode.create.mockResolvedValue({ id: 1 });
+
+      await service.loginWithOAuthProfile(googleProfile);
+
+      expect(prisma.user.update).toHaveBeenCalledWith({
+        where: { id: mockUser.id },
+        data: { googleId: 'google-abc' },
+      });
+      expect(prisma.user.create).not.toHaveBeenCalled();
+    });
+
+    it('rejects unverified provider email', async () => {
+      await expect(
+        service.loginWithOAuthProfile({
+          ...googleProfile,
+          emailVerified: false,
+        }),
+      ).rejects.toThrow(/not verified/i);
+
+      expect(prisma.user.create).not.toHaveBeenCalled();
+    });
+
+    it('rejects a missing email from the provider', async () => {
+      await expect(
+        service.loginWithOAuthProfile({
+          ...googleProfile,
+          email: '',
+        }),
+      ).rejects.toThrow(/email/i);
+    });
+
+    it('rejects linking when email is already linked to another Google account', async () => {
+      prisma.user.findUnique
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce({
+          ...mockUser,
+          googleId: 'different-google-id',
+        });
+
+      await expect(
+        service.loginWithOAuthProfile(googleProfile),
+      ).rejects.toThrow(/already linked/i);
+    });
+
+    it('exchanges a valid OAuth code for JWT tokens', async () => {
+      prisma.oAuthExchangeCode.findUnique.mockResolvedValue({
+        id: 7,
+        codeHash: 'hash',
+        userId: mockUser.id,
+        expiresAt: new Date(Date.now() + 60_000),
+        usedAt: null,
+        user: mockUser,
+      });
+      prisma.oAuthExchangeCode.update.mockResolvedValue({});
+      mockSuccessfulTokenIssuance();
+
+      const result = await service.exchangeOAuthCode('valid-code');
+
+      expect(result).toEqual({
+        accessToken: 'access-token',
+        refreshToken: 'refresh-token',
+      });
+      expect(jwtService.signAsync).toHaveBeenCalledWith({
+        sub: mockUser.id,
+        email: mockUser.email,
+        role: mockUser.role,
+      });
+    });
+
+    it('rejects an invalid or expired OAuth code', async () => {
+      prisma.oAuthExchangeCode.findUnique.mockResolvedValue(null);
+
+      await expect(service.exchangeOAuthCode('bad-code')).rejects.toBeInstanceOf(
+        UnauthorizedException,
+      );
+      expect(jwtService.signAsync).not.toHaveBeenCalled();
+    });
+
+    it('rejects a used OAuth code', async () => {
+      prisma.oAuthExchangeCode.findUnique.mockResolvedValue({
+        id: 7,
+        codeHash: 'hash',
+        userId: mockUser.id,
+        expiresAt: new Date(Date.now() + 60_000),
+        usedAt: new Date(),
+        user: mockUser,
+      });
+
+      await expect(service.exchangeOAuthCode('used-code')).rejects.toBeInstanceOf(
+        UnauthorizedException,
+      );
     });
   });
 });

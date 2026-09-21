@@ -30,6 +30,7 @@ export async function resetE2eDatabase() {
     await client.query(`
       TRUNCATE TABLE
         "RefreshToken",
+        "OAuthExchangeCode",
         "Document",
         "Expense",
         "Revenue",

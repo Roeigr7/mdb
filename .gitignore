@@ -1,1 +1,7 @@
 JWT.txt
+
+# Environment files at repo root (if any) — commit examples only
+.env
+.env.*
+!.env.example
+!.env.production.example
