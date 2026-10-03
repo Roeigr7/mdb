@@ -42,28 +42,28 @@ export const tokens = {
     infoSoft: '#E8F1F8',
   },
   /**
-   * Data-viz palette — premium SaaS, low visual fatigue.
-   * Soft cobalt / dusty rose / teal. Distinguishable, not neon.
+   * Data-viz palette — luminous, harmonious, easy on white cards.
+   * Periwinkle + peach + aqua (pretty without neon).
    */
   chart: {
-    /** Inflows — soft cobalt */
-    revenue: '#4F7CEC',
-    /** Outflows — dusty rose (warm, not alert) */
-    expenses: '#C97B84',
-    /** Net — calm teal */
-    profit: '#3A9E8F',
-    /** Materials / single series — muted gold */
-    materials: '#C9A66B',
-    /** Multi-category — soft categorical set */
+    /** Inflows — soft periwinkle */
+    revenue: '#6C8EFF',
+    /** Outflows — peach coral */
+    expenses: '#FF9F7A',
+    /** Net — aqua mint */
+    profit: '#5ECFB2',
+    /** Materials / single series — champagne */
+    materials: '#E8C07A',
+    /** Multi-category — soft luminous set */
     palette: [
-      '#4F7CEC',
-      '#3A9E8F',
-      '#C97B84',
-      '#C9A66B',
-      '#7B6DB0',
-      '#5B9BB5',
-      '#B8956E',
-      '#8B97A8',
+      '#6C8EFF',
+      '#5ECFB2',
+      '#FF9F7A',
+      '#E8C07A',
+      '#B39DDB',
+      '#7EC8E3',
+      '#F2A7C3',
+      '#A8B5C4',
     ],
   },
   radius: {

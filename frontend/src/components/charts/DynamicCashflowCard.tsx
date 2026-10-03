@@ -370,13 +370,13 @@ export function DynamicCashflowCard({
                 sx={{
                   ...chartAxisSx(theme),
                   '& .MuiAreaElement-series-revenue': {
-                    fillOpacity: 0.15,
+                    fillOpacity: 0.16,
                   },
                   '& .MuiAreaElement-series-expenses': {
-                    fillOpacity: 0.11,
+                    fillOpacity: 0.12,
                   },
                   '& .MuiAreaElement-series-profit': {
-                    fillOpacity: 0.1,
+                    fillOpacity: 0.11,
                   },
                   '& .MuiLineElement-series-revenue': {
                     strokeWidth: 2.15,

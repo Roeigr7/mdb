@@ -4,15 +4,15 @@ import type { SxProps, Theme } from '@mui/material/styles';
 import { tokens } from '../../app/theme';
 
 /**
- * Chart colors — soft cobalt / dusty rose / teal on white cards.
- * Mid-low saturation for comfort; series stay clearly separable.
+ * Chart colors — luminous periwinkle / peach / aqua.
+ * Soft fills read as layered and polished on white surfaces.
  */
 export const CHART_COLORS = {
   revenue: tokens.chart.revenue,
   expenses: tokens.chart.expenses,
   profit: tokens.chart.profit,
   materials: tokens.chart.materials,
-  secondary: '#8B97A8',
+  secondary: '#A8B5C4',
   palette: [...tokens.chart.palette],
 } as const;
 
