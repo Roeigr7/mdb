@@ -1,12 +1,26 @@
 import {
+  BadRequestException,
+  ConflictException,
   ForbiddenException,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
+import bcrypt from 'bcrypt';
+import { Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import type { JwtPayload } from '../auth/types/jwt-payload.js';
+import { ChangePasswordDto } from './dto/change-password.dto.js';
 import { GetUsersDto } from './dto/get-users.dto.js';
 import { UpdateUserDto } from './dto/update-user.dto.js';
+
+type PublicUser = {
+  id: number;
+  name: string;
+  email: string;
+  createdAt: Date;
+  hasPassword: boolean;
+};
 
 @Injectable()
 export class UsersService {
@@ -17,7 +31,7 @@ export class UsersService {
     const limit = query.limit ?? 10;
     const skip = (page - 1) * limit;
 
-    const [data, total] = await Promise.all([
+    const [rows, total] = await Promise.all([
       this.prisma.user.findMany({
         skip,
         take: limit,
@@ -26,13 +40,14 @@ export class UsersService {
           name: true,
           email: true,
           createdAt: true,
+          passwordHash: true,
         },
       }),
       this.prisma.user.count(),
     ]);
 
     return {
-      data,
+      data: rows.map((row) => this.toPublicUser(row)),
       meta: {
         page,
         limit,
@@ -50,6 +65,7 @@ export class UsersService {
         name: true,
         email: true,
         createdAt: true,
+        passwordHash: true,
       },
     });
 
@@ -57,7 +73,7 @@ export class UsersService {
       throw new NotFoundException(`User with id ${user.sub} not found`);
     }
 
-    return foundUser;
+    return this.toPublicUser(foundUser);
   }
 
   async getUserById(id: number) {
@@ -68,6 +84,7 @@ export class UsersService {
         name: true,
         email: true,
         createdAt: true,
+        passwordHash: true,
       },
     });
 
@@ -75,7 +92,7 @@ export class UsersService {
       throw new NotFoundException(`User with id ${id} not found`);
     }
 
-    return user;
+    return this.toPublicUser(user);
   }
 
   async updateUser(id: number, dto: UpdateUserDto, currentUser: JwtPayload) {
@@ -89,16 +106,60 @@ export class UsersService {
       throw new NotFoundException(`User with id ${id} not found`);
     }
 
-    return this.prisma.user.update({
-      where: { id },
-      data: dto,
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        createdAt: true,
-      },
+    try {
+      const updated = await this.prisma.user.update({
+        where: { id },
+        data: dto,
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          createdAt: true,
+          passwordHash: true,
+        },
+      });
+      return this.toPublicUser(updated);
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        throw new ConflictException('Email is already in use');
+      }
+      throw error;
+    }
+  }
+
+  async changePassword(
+    dto: ChangePasswordDto,
+    currentUser: JwtPayload,
+  ): Promise<{ message: string }> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: currentUser.sub },
+      select: { id: true, passwordHash: true },
     });
+
+    if (!user) {
+      throw new NotFoundException(`User with id ${currentUser.sub} not found`);
+    }
+
+    if (user.passwordHash) {
+      if (!dto.currentPassword) {
+        throw new BadRequestException('Current password is required');
+      }
+      const valid = await bcrypt.compare(dto.currentPassword, user.passwordHash);
+      if (!valid) {
+        throw new UnauthorizedException('Current password is incorrect');
+      }
+    }
+
+    const passwordHash = await bcrypt.hash(dto.newPassword, 10);
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { passwordHash },
+    });
+
+    return { message: 'Password updated successfully' };
   }
 
   async deleteUser(id: number, currentUser: JwtPayload) {
@@ -118,6 +179,22 @@ export class UsersService {
 
     return {
       message: 'User deleted successfully',
+    };
+  }
+
+  private toPublicUser(user: {
+    id: number;
+    name: string;
+    email: string;
+    createdAt: Date;
+    passwordHash: string | null;
+  }): PublicUser {
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      createdAt: user.createdAt,
+      hasPassword: Boolean(user.passwordHash),
     };
   }
 

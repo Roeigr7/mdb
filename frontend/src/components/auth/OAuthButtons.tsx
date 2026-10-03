@@ -58,7 +58,7 @@ export function OAuthButtons({ disabled = false }: OAuthButtonsProps) {
             borderColor: 'divider',
             '&:hover': {
               borderColor: 'primary.main',
-              bgcolor: 'rgba(26, 54, 93, 0.04)',
+              bgcolor: 'action.hover',
             },
           }}
         >
@@ -79,7 +79,7 @@ export function OAuthButtons({ disabled = false }: OAuthButtonsProps) {
             borderColor: 'divider',
             '&:hover': {
               borderColor: 'primary.main',
-              bgcolor: 'rgba(26, 54, 93, 0.04)',
+              bgcolor: 'action.hover',
             },
           }}
         >

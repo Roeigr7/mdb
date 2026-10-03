@@ -12,6 +12,7 @@ import { useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { getErrorMessage } from '../../app/api/apiError';
 import { useGetProjectsQuery } from '../../app/features/projects/projectsApi';
+import { PageHeader } from '../../components/ui/PageHeader';
 import { useAppTranslation } from '../../i18n/useAppTranslation';
 import { ExpensesPanel } from './ExpensesPanel';
 
@@ -27,14 +28,40 @@ export function ExpensesPage() {
 
   return (
     <Stack spacing={3}>
-      <Box>
-        <Typography variant="h4" component="h1" gutterBottom>
-          {t('expenses.title')}
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          {t('expenses.subtitle')}
-        </Typography>
-      </Box>
+      <PageHeader
+        title={t('expenses.title')}
+        subtitle={t('expenses.subtitle')}
+        hideTitle
+        actions={
+          !isLoading && projects.length > 0 ? (
+            <FormControl sx={{ minWidth: { xs: '100%', sm: 280 } }} size="small">
+              <InputLabel id="expenses-project-label">
+                {t('expenses.project')}
+              </InputLabel>
+              <Select
+                labelId="expenses-project-label"
+                label={t('expenses.project')}
+                value={projectId}
+                displayEmpty
+                onChange={(event) =>
+                  setSelectedProjectId(Number(event.target.value))
+                }
+              >
+                {projectId === '' && (
+                  <MenuItem value="" disabled>
+                    {t('expenses.chooseProject')}
+                  </MenuItem>
+                )}
+                {projects.map((project) => (
+                  <MenuItem key={project.id} value={project.id}>
+                    {project.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          ) : undefined
+        }
+      />
 
       {isError && (
         <Alert
@@ -65,41 +92,14 @@ export function ExpensesPage() {
             {t('expenses.goToProjects')}
           </Button>
         </Box>
+      ) : projectId === '' ? (
+        <Typography variant="body2" color="text.secondary">
+          {t('expenses.chooseProject')}
+        </Typography>
       ) : (
-        <>
-          <FormControl sx={{ maxWidth: 420 }} fullWidth>
-            <InputLabel id="expenses-project-label">
-              {t('expenses.project')}
-            </InputLabel>
-            <Select
-              labelId="expenses-project-label"
-              label={t('expenses.project')}
-              value={projectId}
-              displayEmpty
-              onChange={(event) => setSelectedProjectId(Number(event.target.value))}
-            >
-              {projectId === '' && (
-                <MenuItem value="" disabled>
-                  {t('expenses.chooseProject')}
-                </MenuItem>
-              )}
-              {projects.map((project) => (
-                <MenuItem key={project.id} value={project.id}>
-                  {project.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-
-          {projectId === '' ? (
-            <Typography variant="body2" color="text.secondary">
-              {t('expenses.chooseProject')}
-            </Typography>
-          ) : (
-            <ExpensesPanel projectId={projectId} />
-          )}
-        </>
+        <ExpensesPanel projectId={projectId} />
       )}
     </Stack>
   );
 }
+

@@ -2,13 +2,17 @@ import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
+import { alpha } from '@mui/material/styles';
 import type { ReactNode } from 'react';
+import { tokens } from '../../app/theme';
 
 export type PageHeaderProps = {
   title: string;
   subtitle?: string;
   actions?: ReactNode;
   breadcrumbs?: ReactNode;
+  /** Hide the large title when the app header already shows it */
+  hideTitle?: boolean;
 };
 
 export function PageHeader({
@@ -16,9 +20,14 @@ export function PageHeader({
   subtitle,
   actions,
   breadcrumbs,
+  hideTitle = false,
 }: PageHeaderProps) {
+  if (hideTitle && !subtitle && !actions && !breadcrumbs) {
+    return null;
+  }
+
   return (
-    <Stack spacing={1.5}>
+    <Stack spacing={1.25}>
       {breadcrumbs}
       <Stack
         direction={{ xs: 'column', sm: 'row' }}
@@ -29,11 +38,21 @@ export function PageHeader({
         }}
       >
         <Box sx={{ minWidth: 0 }}>
-          <Typography variant="h4" component="h1" sx={{ mb: subtitle ? 0.5 : 0 }}>
-            {title}
-          </Typography>
+          {!hideTitle && (
+            <Typography
+              variant="h4"
+              component="h1"
+              sx={{ mb: subtitle ? 0.5 : 0, fontSize: { xs: '1.25rem', sm: '1.375rem' } }}
+            >
+              {title}
+            </Typography>
+          )}
           {subtitle && (
-            <Typography variant="body1" color="text.secondary">
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ maxWidth: 640, lineHeight: 1.55 }}
+            >
               {subtitle}
             </Typography>
           )}
@@ -74,7 +93,7 @@ export function EmptyState({
   return (
     <Box
       sx={{
-        py: 8,
+        py: 7,
         px: 3,
         textAlign: 'center',
         display: 'grid',
@@ -84,26 +103,28 @@ export function EmptyState({
       {icon && (
         <Box
           sx={{
-            width: 56,
-            height: 56,
-            borderRadius: 2,
+            width: 52,
+            height: 52,
+            borderRadius: 2.5,
             display: 'grid',
             placeItems: 'center',
-            bgcolor: 'rgba(30, 58, 95, 0.08)',
-            color: 'primary.main',
+            bgcolor: alpha(tokens.teal[600], 0.08),
+            color: tokens.teal[600],
             mb: 2,
+            border: `1px solid ${alpha(tokens.teal[600], 0.12)}`,
+            '& .MuiSvgIcon-root': { fontSize: 24 },
           }}
         >
           {icon}
         </Box>
       )}
-      <Typography variant="h6" gutterBottom>
+      <Typography variant="h6" gutterBottom sx={{ fontWeight: 700 }}>
         {title}
       </Typography>
       <Typography
         variant="body2"
         color="text.secondary"
-        sx={{ mb: actionLabel ? 2.5 : 0, maxWidth: 420 }}
+        sx={{ mb: actionLabel ? 2.5 : 0, maxWidth: 400, lineHeight: 1.55 }}
       >
         {description}
       </Typography>
@@ -135,14 +156,24 @@ export function ErrorState({
   onRetry,
 }: ErrorStateProps) {
   return (
-    <Box sx={{ py: 6, px: 3, textAlign: 'center' }}>
-      <Typography variant="h6" gutterBottom>
+    <Box
+      sx={{
+        py: 6,
+        px: 3,
+        textAlign: 'center',
+        borderRadius: 3,
+        border: '1px solid',
+        borderColor: alpha(tokens.semantic.error, 0.14),
+        bgcolor: tokens.semantic.errorSoft,
+      }}
+    >
+      <Typography variant="h6" gutterBottom sx={{ fontWeight: 700 }}>
         {title}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
         {description}
       </Typography>
-      <Button variant="outlined" onClick={onRetry}>
+      <Button variant="outlined" color="error" onClick={onRetry}>
         {retryLabel}
       </Button>
     </Box>

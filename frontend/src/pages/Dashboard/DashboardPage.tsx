@@ -1,5 +1,6 @@
 import AccountBalanceRoundedIcon from '@mui/icons-material/AccountBalanceRounded';
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
+import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded';
 import FolderRoundedIcon from '@mui/icons-material/FolderRounded';
 import PaymentsRoundedIcon from '@mui/icons-material/PaymentsRounded';
 import TrendingUpRoundedIcon from '@mui/icons-material/TrendingUpRounded';
@@ -19,18 +20,25 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
-import { alpha, useTheme } from '@mui/material/styles';
-import { BarChart } from '@mui/x-charts/BarChart';
-import { LineChart } from '@mui/x-charts/LineChart';
-import { PieChart } from '@mui/x-charts/PieChart';
-import { useMemo } from 'react';
+import { alpha } from '@mui/material/styles';
+import { useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { getErrorMessage } from '../../app/api/apiError';
 import { useGetAnalyticsQuery } from '../../app/features/analytics/analyticsApi';
 import { selectCurrentUser } from '../../app/features/auth/authSlice';
 import { useGetProjectsQuery } from '../../app/features/projects/projectsApi';
-import { ChartCard, DashboardSkeleton } from '../../components/ui/ChartCard';
+import { tokens } from '../../app/theme';
+import {
+  CashflowAreaChart,
+  CashflowLegendFooter,
+  CategoryDonutChart,
+  ComparisonBarChart,
+  ProfessionalChartCard,
+  sliceLastMonths,
+  type CashflowRange,
+} from '../../components/charts';
+import { DashboardSkeleton } from '../../components/ui/ChartCard';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { StatCard } from '../../components/ui/StatCard';
 import { formatDate, formatMoney } from '../../i18n/format';
@@ -39,19 +47,11 @@ import { monthOverMonthPercent } from './dashboardMetrics';
 
 const CHART_HEIGHT = 300;
 
-function formatMonthLabel(month: string, locale: string) {
-  const [year, monthPart] = month.split('-').map(Number);
-  const date = new Date(year, monthPart - 1, 1);
-  return new Intl.DateTimeFormat(locale, {
-    month: 'short',
-    year: '2-digit',
-  }).format(date);
-}
-
 export function DashboardPage() {
   const { t, i18n } = useAppTranslation();
-  const theme = useTheme();
   const user = useSelector(selectCurrentUser);
+  const navigate = useNavigate();
+  const [cashflowRange, setCashflowRange] = useState<CashflowRange>(12);
 
   const {
     data: projectsData,
@@ -72,20 +72,18 @@ export function DashboardPage() {
   const projects = projectsData?.data ?? [];
   const loading = projectsLoading || analyticsLoading;
 
-  const monthLabels = useMemo(
-    () =>
-      (analytics?.monthlyCashflow ?? []).map((point) =>
-        formatMonthLabel(point.month, i18n.language),
-      ),
-    [analytics?.monthlyCashflow, i18n.language],
+  const cashflowData = useMemo(
+    () => sliceLastMonths(analytics?.monthlyCashflow ?? [], cashflowRange),
+    [analytics?.monthlyCashflow, cashflowRange],
   );
+
   const expenseSeries = useMemo(
-    () => (analytics?.monthlyCashflow ?? []).map((point) => point.expenses),
-    [analytics?.monthlyCashflow],
+    () => cashflowData.map((point) => point.expenses),
+    [cashflowData],
   );
   const revenueSeries = useMemo(
-    () => (analytics?.monthlyCashflow ?? []).map((point) => point.revenue),
-    [analytics?.monthlyCashflow],
+    () => cashflowData.map((point) => point.revenue),
+    [cashflowData],
   );
 
   const revenueTrend = useMemo(
@@ -106,10 +104,20 @@ export function DashboardPage() {
     [profitSeries],
   );
 
-  const categoryPie = useMemo(
+  const rangeRevenueTotal = useMemo(
+    () => cashflowData.reduce((sum, point) => sum + point.revenue, 0),
+    [cashflowData],
+  );
+  const rangeExpensesTotal = useMemo(
+    () => cashflowData.reduce((sum, point) => sum + point.expenses, 0),
+    [cashflowData],
+  );
+  const rangeProfitTotal = rangeRevenueTotal - rangeExpensesTotal;
+
+  const donutSlices = useMemo(
     () =>
-      (analytics?.expensesByCategory ?? []).map((item, index) => ({
-        id: index,
+      (analytics?.expensesByCategory ?? []).map((item) => ({
+        id: item.label,
         value: item.amount,
         label:
           item.label === 'Uncategorized'
@@ -120,9 +128,7 @@ export function DashboardPage() {
   );
 
   const projectBreakdown = analytics?.projectBreakdown ?? [];
-  const projectChartLabels = projectBreakdown.map((item) => item.projectName);
-  const projectRevenue = projectBreakdown.map((item) => item.revenue);
-  const projectExpenses = projectBreakdown.map((item) => item.expenses);
+  const useHorizontalProjects = projectBreakdown.length > 4;
 
   const financeByProjectId = useMemo(() => {
     const map = new Map<
@@ -144,8 +150,11 @@ export function DashboardPage() {
     expenseSeries.some((value) => value > 0) ||
     revenueSeries.some((value) => value > 0);
 
-  const currencyValueFormatter = (value: number | null) =>
-    formatMoney(value ?? 0, i18n.language);
+  const cashflowRanges = [
+    { value: 3 as const, label: t('charts.range3m') },
+    { value: 6 as const, label: t('charts.range6m') },
+    { value: 12 as const, label: t('charts.range12m') },
+  ];
 
   if (loading) {
     return <DashboardSkeleton />;
@@ -177,95 +186,93 @@ export function DashboardPage() {
   }
 
   const summary = analytics?.summary;
+  const displayName =
+    user?.name?.trim() || user?.email?.split('@')[0] || t('app.name');
 
   return (
     <Stack spacing={3}>
-      <Card
+      {/* Compact command strip — not a competing hero */}
+      <Box
         sx={{
-          border: 'none',
-          background: `
-            radial-gradient(ellipse 80% 120% at 100% 0%, ${alpha(theme.palette.primary.light, 0.28)}, transparent 55%),
-            linear-gradient(120deg, #0b1f3a 0%, #1a365d 55%, #243f66 100%)
+          display: 'flex',
+          flexDirection: { xs: 'column', md: 'row' },
+          alignItems: { md: 'center' },
+          justifyContent: 'space-between',
+          gap: 2,
+          p: { xs: 2, sm: 2.5 },
+          borderRadius: 3,
+          border: '1px solid',
+          borderColor: 'divider',
+          bgcolor: '#fff',
+          backgroundImage: `
+            radial-gradient(ellipse 60% 120% at 100% 50%, ${alpha(tokens.teal[500], 0.06)}, transparent 55%),
+            linear-gradient(135deg, ${alpha(tokens.ink[900], 0.02)} 0%, transparent 50%)
           `,
-          color: '#fff',
-          boxShadow: '0 8px 28px rgba(15, 23, 42, 0.12)',
-          '&:hover': {
-            borderColor: 'transparent',
-            boxShadow: '0 10px 32px rgba(15, 23, 42, 0.16)',
-          },
         }}
       >
-        <Box
-          sx={{
-            p: { xs: 2.5, sm: 3.5 },
-            display: 'flex',
-            flexDirection: { xs: 'column', sm: 'row' },
-            alignItems: { sm: 'center' },
-            justifyContent: 'space-between',
-            gap: 2.5,
-          }}
-        >
-          <Box sx={{ maxWidth: 560 }}>
-            <Typography variant="overline" sx={{ color: alpha('#fff', 0.55) }}>
-              {t('dashboard.welcomeEyebrow')}
-            </Typography>
-            <Typography
-              variant="h4"
-              sx={{ fontWeight: 800, letterSpacing: '-0.02em', mb: 0.75 }}
-            >
-              {t('dashboard.welcomeTitle', {
-                name: user?.name?.trim() || user?.email || t('app.name'),
-              })}
-            </Typography>
-            <Typography variant="body1" sx={{ color: alpha('#fff', 0.72) }}>
-              {t('dashboard.welcomeBody')}
-            </Typography>
-          </Box>
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.25}>
-            <Button
-              component={RouterLink}
-              to="/projects"
-              variant="contained"
-              startIcon={<AddRoundedIcon />}
-              sx={{
-                bgcolor: '#fff',
-                color: 'primary.main',
-                '&:hover': { bgcolor: alpha('#fff', 0.92) },
-              }}
-            >
-              {t('projects.create')}
-            </Button>
-            <Button
-              component={RouterLink}
-              to="/reports"
-              variant="outlined"
-              sx={{
-                borderColor: alpha('#fff', 0.35),
-                color: '#fff',
-                '&:hover': {
-                  borderColor: alpha('#fff', 0.55),
-                  bgcolor: alpha('#fff', 0.08),
-                },
-              }}
-            >
-              {t('nav.reports')}
-            </Button>
-          </Stack>
+        <Box sx={{ minWidth: 0 }}>
+          <Typography
+            variant="overline"
+            sx={{ color: tokens.teal[600], letterSpacing: '0.1em' }}
+          >
+            {t('dashboard.welcomeEyebrow')}
+          </Typography>
+          <Typography
+            variant="h4"
+            sx={{
+              fontWeight: 800,
+              letterSpacing: '-0.03em',
+              fontSize: { xs: '1.25rem', sm: '1.375rem' },
+              mb: 0.35,
+            }}
+          >
+            {t('dashboard.welcomeTitle', { name: displayName })}
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 480 }}>
+            {t('dashboard.welcomeBody')}
+          </Typography>
         </Box>
-      </Card>
+        <Stack direction="row" spacing={1} sx={{ flexShrink: 0 }}>
+          <Button
+            component={RouterLink}
+            to="/projects"
+            variant="contained"
+            startIcon={<AddRoundedIcon />}
+          >
+            {t('projects.create')}
+          </Button>
+          <Button
+            component={RouterLink}
+            to="/reports"
+            variant="outlined"
+            endIcon={
+              <ArrowForwardRoundedIcon
+                sx={{
+                  fontSize: 16,
+                  transform: (muiTheme) =>
+                    muiTheme.direction === 'rtl' ? 'scaleX(-1)' : 'none',
+                }}
+              />
+            }
+          >
+            {t('nav.reports')}
+          </Button>
+        </Stack>
+      </Box>
 
       <PageHeader
         title={t('dashboard.title')}
         subtitle={t('dashboard.subtitle')}
+        hideTitle
       />
 
-      <Grid container spacing={2.5}>
+      <Grid container spacing={2}>
         <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
           <StatCard
             title={t('dashboard.totalRevenue')}
             value={formatMoney(summary?.totalRevenue ?? 0, i18n.language)}
             icon={<TrendingUpRoundedIcon />}
-            accent={theme.palette.success.main}
+            tone="revenue"
             sparkline={revenueSeries}
             trend={
               revenueTrend == null
@@ -283,7 +290,7 @@ export function DashboardPage() {
             title={t('dashboard.totalExpenses')}
             value={formatMoney(summary?.totalExpenses ?? 0, i18n.language)}
             icon={<PaymentsRoundedIcon />}
-            accent={theme.palette.error.main}
+            tone="expenses"
             sparkline={expenseSeries}
             trend={
               expensesTrend == null
@@ -301,11 +308,7 @@ export function DashboardPage() {
             title={t('dashboard.netProfit')}
             value={formatMoney(summary?.netProfit ?? 0, i18n.language)}
             icon={<AccountBalanceRoundedIcon />}
-            accent={
-              (summary?.netProfit ?? 0) >= 0
-                ? theme.palette.success.main
-                : theme.palette.error.main
-            }
+            tone="profit"
             sparkline={profitSeries}
             trend={
               profitTrend == null
@@ -323,119 +326,128 @@ export function DashboardPage() {
             title={t('dashboard.totalProjects')}
             value={String(projectsData?.meta.total ?? projects.length)}
             icon={<FolderRoundedIcon />}
+            tone="neutral"
             hint={t('dashboard.projectsHint')}
           />
         </Grid>
       </Grid>
 
-      <Grid container spacing={2.5}>
+      <Grid container spacing={2}>
         <Grid size={{ xs: 12, lg: 8 }}>
-          <ChartCard
+          <ProfessionalChartCard
             title={t('dashboard.cashflowTitle')}
             subtitle={t('dashboard.cashflowSubtitle')}
+            kpiValue={formatMoney(rangeRevenueTotal, i18n.language)}
+            kpiTrend={
+              revenueTrend == null
+                ? null
+                : {
+                    value: revenueTrend,
+                    label: t('charts.vsSelectedPeriod'),
+                  }
+            }
+            ranges={cashflowRanges}
+            activeRange={cashflowRange}
+            onRangeChange={setCashflowRange}
             empty={!hasCashflow}
             emptyLabel={t('analytics.emptyChart')}
+            error={analyticsError}
+            errorLabel={t('charts.loadError')}
+            retryLabel={t('common.retry')}
+            onRetry={() => void refetchAnalytics()}
             height={CHART_HEIGHT}
+            footer={
+              hasCashflow ? (
+                <CashflowLegendFooter
+                  revenueLabel={t('analytics.seriesRevenue')}
+                  expensesLabel={t('analytics.seriesExpenses')}
+                  profitLabel={t('charts.profitSeries')}
+                  revenueTotal={rangeRevenueTotal}
+                  expensesTotal={rangeExpensesTotal}
+                  profitTotal={rangeProfitTotal}
+                  language={i18n.language}
+                />
+              ) : undefined
+            }
           >
-            <LineChart
+            <CashflowAreaChart
+              data={cashflowData}
+              language={i18n.language}
               height={CHART_HEIGHT}
-              series={[
-                {
-                  data: revenueSeries,
-                  label: t('analytics.seriesRevenue'),
-                  color: theme.palette.success.main,
-                  area: true,
-                  showMark: false,
-                  valueFormatter: currencyValueFormatter,
-                },
-                {
-                  data: expenseSeries,
-                  label: t('analytics.seriesExpenses'),
-                  color: theme.palette.error.main,
-                  area: true,
-                  showMark: false,
-                  valueFormatter: currencyValueFormatter,
-                },
-              ]}
-              xAxis={[
-                {
-                  data: monthLabels,
-                  scaleType: 'point',
-                  tickLabelStyle: { fontSize: 11 },
-                },
-              ]}
-              margin={{ left: 16, right: 16, top: 24, bottom: 8 }}
-              grid={{ horizontal: true }}
+              revenueLabel={t('analytics.seriesRevenue')}
+              expensesLabel={t('analytics.seriesExpenses')}
+              profitLabel={t('charts.profitSeries')}
             />
-          </ChartCard>
+          </ProfessionalChartCard>
         </Grid>
 
         <Grid size={{ xs: 12, lg: 4 }}>
-          <ChartCard
+          <ProfessionalChartCard
             title={t('dashboard.expenseMixTitle')}
             subtitle={t('dashboard.expenseMixSubtitle')}
-            empty={categoryPie.length === 0}
+            empty={donutSlices.length === 0}
             emptyLabel={t('analytics.emptyChart')}
+            error={analyticsError}
+            errorLabel={t('charts.loadError')}
+            retryLabel={t('common.retry')}
+            onRetry={() => void refetchAnalytics()}
             height={CHART_HEIGHT}
           >
-            <PieChart
-              height={CHART_HEIGHT}
-              series={[
-                {
-                  data: categoryPie,
-                  innerRadius: 58,
-                  outerRadius: 100,
-                  paddingAngle: 2,
-                  cornerRadius: 4,
-                  valueFormatter: (item) =>
-                    formatMoney(item.value, i18n.language),
-                },
-              ]}
-              margin={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            <CategoryDonutChart
+              data={donutSlices}
+              language={i18n.language}
+              height={CHART_HEIGHT - 16}
+              centerLabel={t('charts.totalCenter')}
+              otherLabel={t('charts.otherCategory')}
             />
-          </ChartCard>
+          </ProfessionalChartCard>
         </Grid>
 
         {projectBreakdown.length > 0 && (
           <Grid size={{ xs: 12 }}>
-            <ChartCard
+            <ProfessionalChartCard
               title={t('dashboard.projectsChartTitle')}
               subtitle={t('dashboard.projectsChartSubtitle')}
-              height={CHART_HEIGHT}
+              height={
+                useHorizontalProjects
+                  ? Math.max(260, projectBreakdown.length * 42)
+                  : CHART_HEIGHT
+              }
             >
-              <BarChart
-                height={CHART_HEIGHT}
+              <ComparisonBarChart
+                categories={projectBreakdown.map((item) => item.projectName)}
                 series={[
                   {
-                    data: projectRevenue,
+                    id: 'revenue',
                     label: t('analytics.seriesRevenue'),
-                    color: theme.palette.success.main,
-                    valueFormatter: currencyValueFormatter,
+                    data: projectBreakdown.map((item) => item.revenue),
                   },
                   {
-                    data: projectExpenses,
+                    id: 'expenses',
                     label: t('analytics.seriesExpenses'),
-                    color: theme.palette.error.main,
-                    valueFormatter: currencyValueFormatter,
+                    data: projectBreakdown.map((item) => item.expenses),
                   },
                 ]}
-                xAxis={[
-                  {
-                    data: projectChartLabels,
-                    scaleType: 'band',
-                    tickLabelStyle: { fontSize: 11 },
-                  },
-                ]}
-                margin={{ left: 16, right: 16, top: 24, bottom: 8 }}
-                grid={{ horizontal: true }}
-                borderRadius={6}
+                language={i18n.language}
+                height={
+                  useHorizontalProjects
+                    ? Math.max(260, projectBreakdown.length * 42)
+                    : CHART_HEIGHT
+                }
+                layout={useHorizontalProjects ? 'horizontal' : 'vertical'}
+                onCategoryClick={(index) => {
+                  const project = projectBreakdown[index];
+                  if (project) {
+                    navigate(`/projects/${project.projectId}`);
+                  }
+                }}
               />
-            </ChartCard>
+            </ProfessionalChartCard>
           </Grid>
         )}
       </Grid>
 
-      <Card>
+      <Card sx={{ overflow: 'hidden' }}>
         <Box
           sx={{
             px: 2.5,
@@ -450,12 +462,28 @@ export function DashboardPage() {
           }}
         >
           <Box>
-            <Typography variant="h6">{t('dashboard.recentProjectsTitle')}</Typography>
+            <Typography variant="h6" sx={{ fontWeight: 700 }}>
+              {t('dashboard.recentProjectsTitle')}
+            </Typography>
             <Typography variant="body2" color="text.secondary">
               {t('dashboard.recentProjectsSubtitle')}
             </Typography>
           </Box>
-          <Button component={RouterLink} to="/projects" variant="outlined" size="small">
+          <Button
+            component={RouterLink}
+            to="/projects"
+            variant="text"
+            size="small"
+            endIcon={
+              <ArrowForwardRoundedIcon
+                sx={{
+                  fontSize: 16,
+                  transform: (muiTheme) =>
+                    muiTheme.direction === 'rtl' ? 'scaleX(-1)' : 'none',
+                }}
+              />
+            }
+          >
             {t('dashboard.viewAllProjects')}
           </Button>
         </Box>
@@ -493,20 +521,36 @@ export function DashboardPage() {
               <TableBody>
                 {recentProjects.map((project) => {
                   const finance = financeByProjectId.get(project.id);
+                  const profitColor =
+                    finance && finance.profit < 0
+                      ? 'error.main'
+                      : tokens.chart.revenue;
                   return (
-                    <TableRow key={project.id} hover>
+                    <TableRow
+                      key={project.id}
+                      hover
+                      sx={{ cursor: 'pointer' }}
+                      onClick={() => navigate(`/projects/${project.id}`)}
+                    >
                       <TableCell>
-                        <Typography variant="subtitle2">{project.name}</Typography>
-                        <Typography variant="caption" color="text.secondary" noWrap>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 650 }}>
+                          {project.name}
+                        </Typography>
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          noWrap
+                          sx={{ display: 'block', maxWidth: 280 }}
+                        >
                           {project.description || t('common.none')}
                         </Typography>
                       </TableCell>
-                      <TableCell align="right">
+                      <TableCell align="right" className="tabular-nums">
                         {finance
                           ? formatMoney(finance.revenue, i18n.language)
                           : t('common.none')}
                       </TableCell>
-                      <TableCell align="right">
+                      <TableCell align="right" className="tabular-nums">
                         {finance
                           ? formatMoney(finance.expenses, i18n.language)
                           : t('common.none')}
@@ -514,12 +558,10 @@ export function DashboardPage() {
                       <TableCell align="right">
                         <Typography
                           variant="body2"
+                          className="tabular-nums"
                           sx={{
-                            fontWeight: 600,
-                            color:
-                              finance && finance.profit < 0
-                                ? 'error.main'
-                                : 'success.main',
+                            fontWeight: 700,
+                            color: finance ? profitColor : 'text.secondary',
                           }}
                         >
                           {finance
@@ -528,9 +570,11 @@ export function DashboardPage() {
                         </Typography>
                       </TableCell>
                       <TableCell>
-                        {formatDate(project.updatedAt, i18n.language)}
+                        <Typography variant="body2" color="text.secondary">
+                          {formatDate(project.updatedAt, i18n.language)}
+                        </Typography>
                       </TableCell>
-                      <TableCell align="right">
+                      <TableCell align="right" onClick={(e) => e.stopPropagation()}>
                         <Tooltip title={t('common.view')}>
                           <IconButton
                             component={RouterLink}
@@ -539,6 +583,10 @@ export function DashboardPage() {
                             aria-label={t('projects.viewAria', {
                               name: project.name,
                             })}
+                            sx={{
+                              border: '1px solid',
+                              borderColor: 'divider',
+                            }}
                           >
                             <VisibilityOutlinedIcon fontSize="small" />
                           </IconButton>

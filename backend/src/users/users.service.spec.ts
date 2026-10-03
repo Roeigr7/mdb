@@ -26,11 +26,28 @@ describe('UsersService', () => {
     role: UserRole.USER,
   };
 
-  const safeUser = {
+  const dbUser = {
     id: 1,
     name: 'Roei',
     email: 'roei@example.com',
     createdAt: new Date('2024-01-01T00:00:00.000Z'),
+    passwordHash: 'secret',
+  };
+
+  const publicUser = {
+    id: 1,
+    name: 'Roei',
+    email: 'roei@example.com',
+    createdAt: new Date('2024-01-01T00:00:00.000Z'),
+    hasPassword: true,
+  };
+
+  const userSelect = {
+    id: true,
+    name: true,
+    email: true,
+    createdAt: true,
+    passwordHash: true,
   };
 
   beforeEach(async () => {
@@ -56,7 +73,7 @@ describe('UsersService', () => {
 
   describe('getUsers', () => {
     it('returns paginated users with defaults page=1 and limit=10', async () => {
-      prisma.user.findMany.mockResolvedValue([safeUser]);
+      prisma.user.findMany.mockResolvedValue([dbUser]);
       prisma.user.count.mockResolvedValue(1);
 
       const result = await service.getUsers({});
@@ -64,16 +81,11 @@ describe('UsersService', () => {
       expect(prisma.user.findMany).toHaveBeenCalledWith({
         skip: 0,
         take: 10,
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          createdAt: true,
-        },
+        select: userSelect,
       });
       expect(prisma.user.count).toHaveBeenCalledWith();
       expect(result).toEqual({
-        data: [safeUser],
+        data: [publicUser],
         meta: {
           page: 1,
           limit: 10,
@@ -84,7 +96,7 @@ describe('UsersService', () => {
     });
 
     it('applies custom pagination and computes totalPages', async () => {
-      prisma.user.findMany.mockResolvedValue([safeUser]);
+      prisma.user.findMany.mockResolvedValue([dbUser]);
       prisma.user.count.mockResolvedValue(25);
 
       const result = await service.getUsers({ page: 2, limit: 10 });
@@ -106,20 +118,15 @@ describe('UsersService', () => {
 
   describe('getMe', () => {
     it('returns the authenticated user', async () => {
-      prisma.user.findUnique.mockResolvedValue(safeUser);
+      prisma.user.findUnique.mockResolvedValue(dbUser);
 
       const result = await service.getMe(currentUser);
 
       expect(prisma.user.findUnique).toHaveBeenCalledWith({
         where: { id: currentUser.sub },
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          createdAt: true,
-        },
+        select: userSelect,
       });
-      expect(result).toEqual(safeUser);
+      expect(result).toEqual(publicUser);
       expect(result).not.toHaveProperty('passwordHash');
     });
 
@@ -134,9 +141,9 @@ describe('UsersService', () => {
 
   describe('getUserById', () => {
     it('returns a user when found', async () => {
-      prisma.user.findUnique.mockResolvedValue(safeUser);
+      prisma.user.findUnique.mockResolvedValue(dbUser);
 
-      await expect(service.getUserById(1)).resolves.toEqual(safeUser);
+      await expect(service.getUserById(1)).resolves.toEqual(publicUser);
     });
 
     it('throws NotFoundException when user does not exist', async () => {
@@ -150,12 +157,10 @@ describe('UsersService', () => {
 
   describe('updateUser', () => {
     it('updates own account and omits passwordHash', async () => {
-      const updated = { ...safeUser, name: 'David' };
-      prisma.user.findUnique.mockResolvedValue({
-        ...safeUser,
-        passwordHash: 'secret',
-      });
-      prisma.user.update.mockResolvedValue(updated);
+      const updatedDb = { ...dbUser, name: 'David' };
+      const updatedPublic = { ...publicUser, name: 'David' };
+      prisma.user.findUnique.mockResolvedValue(dbUser);
+      prisma.user.update.mockResolvedValue(updatedDb);
 
       const result = await service.updateUser(
         1,
@@ -166,14 +171,9 @@ describe('UsersService', () => {
       expect(prisma.user.update).toHaveBeenCalledWith({
         where: { id: 1 },
         data: { name: 'David' },
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          createdAt: true,
-        },
+        select: userSelect,
       });
-      expect(result).toEqual(updated);
+      expect(result).toEqual(updatedPublic);
       expect(result).not.toHaveProperty('passwordHash');
     });
 
@@ -196,7 +196,7 @@ describe('UsersService', () => {
 
     it('propagates Prisma errors from update', async () => {
       const prismaError = new Error('Unique constraint failed');
-      prisma.user.findUnique.mockResolvedValue(safeUser);
+      prisma.user.findUnique.mockResolvedValue(dbUser);
       prisma.user.update.mockRejectedValue(prismaError);
 
       await expect(
@@ -207,8 +207,8 @@ describe('UsersService', () => {
 
   describe('deleteUser', () => {
     it('deletes own account', async () => {
-      prisma.user.findUnique.mockResolvedValue(safeUser);
-      prisma.user.delete.mockResolvedValue(safeUser);
+      prisma.user.findUnique.mockResolvedValue(dbUser);
+      prisma.user.delete.mockResolvedValue(dbUser);
 
       await expect(service.deleteUser(1, currentUser)).resolves.toEqual({
         message: 'User deleted successfully',
@@ -234,7 +234,7 @@ describe('UsersService', () => {
 
     it('propagates Prisma errors from delete', async () => {
       const prismaError = new Error('Database delete failed');
-      prisma.user.findUnique.mockResolvedValue(safeUser);
+      prisma.user.findUnique.mockResolvedValue(dbUser);
       prisma.user.delete.mockRejectedValue(prismaError);
 
       await expect(service.deleteUser(1, currentUser)).rejects.toBe(prismaError);

@@ -9,7 +9,6 @@ import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
 import CircularProgress from '@mui/material/CircularProgress';
 import Grid from '@mui/material/Grid';
 import IconButton from '@mui/material/IconButton';
@@ -22,62 +21,17 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useState } from 'react';
 import { getErrorMessage } from '../../app/api/apiError';
 import type { Expense } from '../../app/features/expenses/expenses.types';
 import { useGetExpensesQuery } from '../../app/features/expenses/expensesApi';
 import { useNotification } from '../../components/feedback/NotificationProvider';
+import { StatCard } from '../../components/ui/StatCard';
 import { formatDate, formatMoney } from '../../i18n/format';
 import { useAppTranslation } from '../../i18n/useAppTranslation';
 import { DeleteExpenseDialog } from './DeleteExpenseDialog';
 import { ExpenseFormDialog } from './ExpenseFormDialog';
 import { ScanDocumentDialog } from './ScanDocumentDialog';
-
-type SummaryCardProps = {
-  title: string;
-  value: string;
-  hint: string;
-  icon: ReactNode;
-};
-
-function SummaryCard({ title, value, hint, icon }: SummaryCardProps) {
-  return (
-    <Card sx={{ height: '100%' }}>
-      <CardContent>
-        <Stack
-          direction="row"
-          spacing={1}
-          sx={{ justifyContent: 'space-between', alignItems: 'flex-start' }}
-        >
-          <Box>
-            <Typography variant="body2" color="text.secondary" gutterBottom>
-              {title}
-            </Typography>
-            <Typography variant="h4" sx={{ fontWeight: 700 }}>
-              {value}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              {hint}
-            </Typography>
-          </Box>
-          <Box
-            sx={{
-              width: 44,
-              height: 44,
-              borderRadius: 2,
-              display: 'grid',
-              placeItems: 'center',
-              bgcolor: 'rgba(30, 58, 95, 0.08)',
-              color: 'primary.main',
-            }}
-          >
-            {icon}
-          </Box>
-        </Stack>
-      </CardContent>
-    </Card>
-  );
-}
 
 type ExpensesPanelProps = {
   projectId: number;
@@ -184,29 +138,32 @@ export function ExpensesPanel({
       )}
 
       {showSummary && !isLoading && !isError && (
-        <Grid container spacing={2.5}>
+        <Grid container spacing={2}>
           <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-            <SummaryCard
+            <StatCard
               title={t('expenses.total')}
               value={formatMoney(total, i18n.language)}
               hint={t('expenses.totalHint')}
               icon={<PaymentsRoundedIcon />}
+              tone="expenses"
             />
           </Grid>
           <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-            <SummaryCard
+            <StatCard
               title={t('expenses.thisMonth')}
               value={formatMoney(thisMonthTotal, i18n.language)}
               hint={t('expenses.thisMonthHint')}
               icon={<CalendarMonthRoundedIcon />}
+              tone="default"
             />
           </Grid>
           <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-            <SummaryCard
+            <StatCard
               title={t('expenses.count')}
               value={String(totalCount)}
               hint={t('expenses.countHint')}
               icon={<ReceiptLongRoundedIcon />}
+              tone="neutral"
             />
           </Grid>
         </Grid>

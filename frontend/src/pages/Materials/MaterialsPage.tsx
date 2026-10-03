@@ -9,10 +9,11 @@ import Select from '@mui/material/Select';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { useState } from 'react';
-import { useAppTranslation } from '../../i18n/useAppTranslation';
 import { Link as RouterLink } from 'react-router-dom';
 import { getErrorMessage } from '../../app/api/apiError';
 import { useGetProjectsQuery } from '../../app/features/projects/projectsApi';
+import { PageHeader } from '../../components/ui/PageHeader';
+import { useAppTranslation } from '../../i18n/useAppTranslation';
 import { MaterialsPanel } from './MaterialsPanel';
 
 export function MaterialsPage() {
@@ -27,14 +28,40 @@ export function MaterialsPage() {
 
   return (
     <Stack spacing={3}>
-      <Box>
-        <Typography variant="h4" component="h1" gutterBottom>
-          {t('materials.title')}
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          {t('materials.subtitle')}
-        </Typography>
-      </Box>
+      <PageHeader
+        title={t('materials.title')}
+        subtitle={t('materials.subtitle')}
+        hideTitle
+        actions={
+          !isLoading && projects.length > 0 ? (
+            <FormControl sx={{ minWidth: { xs: '100%', sm: 280 } }} size="small">
+              <InputLabel id="materials-project-label">
+                {t('materials.project')}
+              </InputLabel>
+              <Select
+                labelId="materials-project-label"
+                label={t('materials.project')}
+                value={projectId}
+                displayEmpty
+                onChange={(event) =>
+                  setSelectedProjectId(Number(event.target.value))
+                }
+              >
+                {projectId === '' && (
+                  <MenuItem value="" disabled>
+                    {t('materials.chooseProject')}
+                  </MenuItem>
+                )}
+                {projects.map((project) => (
+                  <MenuItem key={project.id} value={project.id}>
+                    {project.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          ) : undefined
+        }
+      />
 
       {isError && (
         <Alert
@@ -65,40 +92,12 @@ export function MaterialsPage() {
             {t('materials.goToProjects')}
           </Button>
         </Box>
+      ) : projectId === '' ? (
+        <Typography variant="body2" color="text.secondary">
+          {t('materials.chooseProject')}
+        </Typography>
       ) : (
-        <>
-          <FormControl sx={{ maxWidth: 420 }} fullWidth>
-            <InputLabel id="materials-project-label">
-              {t('materials.project')}
-            </InputLabel>
-            <Select
-              labelId="materials-project-label"
-              label={t('materials.project')}
-              value={projectId}
-              displayEmpty
-              onChange={(event) => setSelectedProjectId(Number(event.target.value))}
-            >
-              {projectId === '' && (
-                <MenuItem value="" disabled>
-                  {t('materials.chooseProject')}
-                </MenuItem>
-              )}
-              {projects.map((project) => (
-                <MenuItem key={project.id} value={project.id}>
-                  {project.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-
-          {projectId === '' ? (
-            <Typography variant="body2" color="text.secondary">
-              {t('materials.chooseProject')}
-            </Typography>
-          ) : (
-            <MaterialsPanel projectId={projectId} />
-          )}
-        </>
+        <MaterialsPanel projectId={projectId} />
       )}
     </Stack>
   );

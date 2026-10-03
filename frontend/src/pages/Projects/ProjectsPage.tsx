@@ -72,12 +72,12 @@ export function ProjectsPage() {
       <PageHeader
         title={t('projects.title')}
         subtitle={subtitle}
+        hideTitle
         actions={
           <Button
             variant="contained"
             startIcon={<AddRoundedIcon />}
             onClick={openCreate}
-            size="large"
           >
             {t('projects.create')}
           </Button>
@@ -108,10 +108,10 @@ export function ProjectsPage() {
               sx={{
                 width: 56,
                 height: 56,
-                borderRadius: 2,
+                borderRadius: 2.5,
                 display: 'grid',
                 placeItems: 'center',
-                bgcolor: 'rgba(30, 58, 95, 0.08)',
+                bgcolor: 'action.selected',
                 color: 'primary.main',
                 mx: 'auto',
                 mb: 2,

@@ -10,9 +10,8 @@ import {
 import { resolveAuthGate } from './app/features/auth/authGate';
 import { AuthBootstrap } from './components/auth/AuthBootstrap';
 import { DashboardLayout } from './components/layout/DashboardLayout';
-import { AuthCallbackPage } from './pages/AuthCallback/AuthCallbackPage';
 import { AnalyticsPage } from './pages/Analytics/AnalyticsPage';
-import { ComingSoonPage } from './pages/ComingSoon/ComingSoonPage';
+import { AuthCallbackPage } from './pages/AuthCallback/AuthCallbackPage';
 import { DashboardPage } from './pages/Dashboard/DashboardPage';
 import { LoginPage } from './pages/Login/LoginPage';
 import { ExpensesPage } from './pages/Expenses/ExpensesPage';
@@ -20,6 +19,8 @@ import { MaterialsPage } from './pages/Materials/MaterialsPage';
 import { ProjectDetailsPage } from './pages/ProjectDetails/ProjectDetailsPage';
 import { ProjectsPage } from './pages/Projects/ProjectsPage';
 import { RevenuePage } from './pages/Revenue/RevenuePage';
+import { SettingsPage } from './pages/Settings/SettingsPage';
+import { SuppliersPage } from './pages/Suppliers/SuppliersPage';
 
 function AuthLoading() {
   return (
@@ -101,10 +102,7 @@ function App() {
             <Route path="projects" element={<ProjectsPage />} />
             <Route path="projects/:id" element={<ProjectDetailsPage />} />
             <Route path="materials" element={<MaterialsPage />} />
-            <Route
-              path="suppliers"
-              element={<ComingSoonPage kind="suppliers" />}
-            />
+            <Route path="suppliers" element={<SuppliersPage />} />
             <Route path="expenses" element={<ExpensesPage />} />
             <Route path="revenue" element={<RevenuePage />} />
             <Route path="reports" element={<AnalyticsPage />} />
@@ -112,10 +110,7 @@ function App() {
               path="analytics"
               element={<Navigate to="/reports" replace />}
             />
-            <Route
-              path="settings"
-              element={<ComingSoonPage kind="settings" />}
-            />
+            <Route path="settings" element={<SettingsPage />} />
           </Route>
         </Route>
 

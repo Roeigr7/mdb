@@ -2,8 +2,8 @@ import DashboardRoundedIcon from '@mui/icons-material/DashboardRounded';
 import FolderRoundedIcon from '@mui/icons-material/FolderRounded';
 import InsightsRoundedIcon from '@mui/icons-material/InsightsRounded';
 import Inventory2RoundedIcon from '@mui/icons-material/Inventory2Rounded';
+import KeyboardDoubleArrowLeftRoundedIcon from '@mui/icons-material/KeyboardDoubleArrowLeftRounded';
 import LocalShippingRoundedIcon from '@mui/icons-material/LocalShippingRounded';
-import MenuOpenRoundedIcon from '@mui/icons-material/MenuOpenRounded';
 import PaymentsRoundedIcon from '@mui/icons-material/PaymentsRounded';
 import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded';
 import TrendingUpRoundedIcon from '@mui/icons-material/TrendingUpRounded';
@@ -16,7 +16,6 @@ import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
-import Toolbar from '@mui/material/Toolbar';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import { alpha } from '@mui/material/styles';
@@ -25,8 +24,10 @@ import { NavLink, useLocation } from 'react-router-dom';
 import {
   DRAWER_WIDTH,
   DRAWER_WIDTH_COLLAPSED,
+  HEADER_HEIGHT,
   SIDEBAR_BG,
   SIDEBAR_BG_ELEVATED,
+  tokens,
 } from '../../app/theme';
 import type { AppTranslationKey } from '../../i18n/useAppTranslation';
 import { useAppTranslation } from '../../i18n/useAppTranslation';
@@ -39,20 +40,20 @@ type NavItem = {
 };
 
 const generalNav: NavItem[] = [
-  { labelKey: 'nav.dashboard', path: '/dashboard', icon: <DashboardRoundedIcon /> },
-  { labelKey: 'nav.projects', path: '/projects', icon: <FolderRoundedIcon /> },
-  { labelKey: 'nav.reports', path: '/reports', icon: <InsightsRoundedIcon /> },
+  { labelKey: 'nav.dashboard', path: '/dashboard', icon: <DashboardRoundedIcon fontSize="small" /> },
+  { labelKey: 'nav.projects', path: '/projects', icon: <FolderRoundedIcon fontSize="small" /> },
+  { labelKey: 'nav.reports', path: '/reports', icon: <InsightsRoundedIcon fontSize="small" /> },
 ];
 
 const managementNav: NavItem[] = [
-  { labelKey: 'nav.materials', path: '/materials', icon: <Inventory2RoundedIcon /> },
-  { labelKey: 'nav.suppliers', path: '/suppliers', icon: <LocalShippingRoundedIcon /> },
-  { labelKey: 'nav.expenses', path: '/expenses', icon: <PaymentsRoundedIcon /> },
-  { labelKey: 'nav.revenue', path: '/revenue', icon: <TrendingUpRoundedIcon /> },
+  { labelKey: 'nav.materials', path: '/materials', icon: <Inventory2RoundedIcon fontSize="small" /> },
+  { labelKey: 'nav.suppliers', path: '/suppliers', icon: <LocalShippingRoundedIcon fontSize="small" /> },
+  { labelKey: 'nav.expenses', path: '/expenses', icon: <PaymentsRoundedIcon fontSize="small" /> },
+  { labelKey: 'nav.revenue', path: '/revenue', icon: <TrendingUpRoundedIcon fontSize="small" /> },
 ];
 
 const systemNav: NavItem[] = [
-  { labelKey: 'nav.settings', path: '/settings', icon: <SettingsRoundedIcon /> },
+  { labelKey: 'nav.settings', path: '/settings', icon: <SettingsRoundedIcon fontSize="small" /> },
 ];
 
 type SidebarProps = {
@@ -68,26 +69,26 @@ function BrandMark({ collapsed }: { collapsed: boolean }) {
       sx={{
         display: 'flex',
         alignItems: 'center',
-        gap: 1.25,
+        gap: 1.5,
         minWidth: 0,
-        px: collapsed ? 0 : 0.5,
+        px: collapsed ? 0 : 0.25,
         justifyContent: collapsed ? 'center' : 'flex-start',
       }}
     >
       <Box
         sx={{
-          width: 36,
-          height: 36,
-          borderRadius: 2,
-          bgcolor: alpha('#fff', 0.12),
+          width: 34,
+          height: 34,
+          borderRadius: 1.5,
+          background: `linear-gradient(145deg, ${tokens.teal[500]} 0%, ${tokens.teal[700]} 100%)`,
           color: '#fff',
           display: 'grid',
           placeItems: 'center',
           fontWeight: 800,
-          fontSize: 12,
-          letterSpacing: 0.5,
+          fontSize: 11,
+          letterSpacing: 0.6,
           flexShrink: 0,
-          border: `1px solid ${alpha('#fff', 0.16)}`,
+          boxShadow: `0 2px 8px ${alpha(tokens.teal[600], 0.35)}`,
         }}
       >
         MBD
@@ -95,16 +96,22 @@ function BrandMark({ collapsed }: { collapsed: boolean }) {
       {!collapsed && (
         <Box sx={{ minWidth: 0 }}>
           <Typography
-            variant="subtitle1"
+            variant="subtitle2"
             noWrap
-            sx={{ lineHeight: 1.2, fontWeight: 700, color: '#fff' }}
+            sx={{
+              lineHeight: 1.15,
+              fontWeight: 700,
+              color: '#fff',
+              fontSize: '0.875rem',
+              letterSpacing: '-0.01em',
+            }}
           >
             {t('app.name')}
           </Typography>
           <Typography
             variant="caption"
             noWrap
-            sx={{ color: alpha('#fff', 0.55) }}
+            sx={{ color: alpha('#fff', 0.45), fontSize: '0.6875rem' }}
           >
             {t('app.tagline')}
           </Typography>
@@ -129,20 +136,33 @@ function NavSection({
   const location = useLocation();
 
   return (
-    <Box sx={{ mb: 1 }}>
+    <Box sx={{ mb: 0.5 }}>
       {titleKey && !collapsed && (
         <Typography
           variant="overline"
           sx={{
             display: 'block',
-            px: 2.5,
-            pt: 1.5,
+            px: 2.25,
+            pt: 1.75,
             pb: 0.75,
-            color: alpha('#fff', 0.42),
+            color: alpha('#fff', 0.32),
+            fontSize: '0.625rem',
+            letterSpacing: '0.1em',
           }}
         >
           {t(titleKey)}
         </Typography>
+      )}
+      {collapsed && titleKey && (
+        <Box
+          sx={{
+            mx: 'auto',
+            my: 1.25,
+            width: 20,
+            height: 1,
+            bgcolor: alpha('#fff', 0.1),
+          }}
+        />
       )}
       <List sx={{ py: 0.25 }}>
         {items.map((item) => {
@@ -159,26 +179,45 @@ function NavSection({
               selected={selected}
               onClick={onNavigate}
               sx={{
+                position: 'relative',
                 justifyContent: collapsed ? 'center' : 'flex-start',
-                px: collapsed ? 1 : 1.5,
-                mx: 1.25,
-                color: selected ? '#fff' : alpha('#fff', 0.72),
-                bgcolor: selected ? alpha('#fff', 0.12) : 'transparent',
-                border: `1px solid ${selected ? alpha('#fff', 0.08) : 'transparent'}`,
+                px: collapsed ? 1 : 1.25,
+                mx: collapsed ? 1 : 1.25,
+                my: 0.15,
+                minHeight: 40,
+                color: selected ? '#fff' : alpha('#fff', 0.62),
+                bgcolor: selected ? alpha('#fff', 0.09) : 'transparent',
+                '&::before': selected
+                  ? {
+                      content: '""',
+                      position: 'absolute',
+                      insetInlineStart: 0,
+                      top: '20%',
+                      bottom: '20%',
+                      width: 2.5,
+                      borderRadius: 99,
+                      bgcolor: tokens.teal[500],
+                      boxShadow: `0 0 8px ${alpha(tokens.teal[500], 0.5)}`,
+                    }
+                  : undefined,
                 '&:hover': {
-                  bgcolor: alpha('#fff', 0.08),
+                  bgcolor: alpha('#fff', 0.06),
                   color: '#fff',
                 },
                 '&.Mui-selected:hover': {
-                  bgcolor: alpha('#fff', 0.16),
+                  bgcolor: alpha('#fff', 0.12),
                 },
               }}
             >
               <ListItemIcon
                 sx={{
-                  minWidth: collapsed ? 0 : 40,
+                  minWidth: collapsed ? 0 : 36,
                   justifyContent: 'center',
-                  color: 'inherit',
+                  color: selected ? tokens.teal[500] : 'inherit',
+                  opacity: selected ? 1 : 0.85,
+                  '& .MuiSvgIcon-root': {
+                    fontSize: 20,
+                  },
                 }}
               >
                 {item.icon}
@@ -189,7 +228,8 @@ function NavSection({
                   sx={{
                     '& .MuiListItemText-primary': {
                       fontWeight: selected ? 650 : 500,
-                      fontSize: '0.9rem',
+                      fontSize: '0.8125rem',
+                      letterSpacing: '-0.01em',
                     },
                   }}
                 />
@@ -198,9 +238,9 @@ function NavSection({
           );
 
           return (
-            <ListItem key={item.path} disablePadding sx={{ mb: 0.35 }}>
+            <ListItem key={item.path} disablePadding>
               {collapsed ? (
-                <Tooltip title={label} placement="right">
+                <Tooltip title={label} placement="right" enterDelay={300}>
                   {button}
                 </Tooltip>
               ) : (
@@ -234,18 +274,21 @@ function SidebarContent({
         height: '100%',
         bgcolor: SIDEBAR_BG,
         backgroundImage: `
-          radial-gradient(ellipse 120% 80% at 0% 0%, ${alpha('#2b4c7e', 0.45)}, transparent 55%),
-          linear-gradient(180deg, ${SIDEBAR_BG_ELEVATED} 0%, ${SIDEBAR_BG} 42%)
+          radial-gradient(ellipse 100% 60% at 0% -10%, ${alpha(tokens.teal[600], 0.22)}, transparent 50%),
+          linear-gradient(180deg, ${SIDEBAR_BG_ELEVATED} 0%, ${SIDEBAR_BG} 38%)
         `,
         color: '#fff',
       }}
     >
-      <Toolbar
+      <Box
         sx={{
+          display: 'flex',
+          alignItems: 'center',
           px: collapsed ? 1 : 2,
           gap: 1,
-          minHeight: { xs: 72 },
+          height: HEADER_HEIGHT,
           justifyContent: collapsed ? 'center' : 'space-between',
+          flexShrink: 0,
         }}
       >
         <BrandMark collapsed={collapsed} />
@@ -254,16 +297,25 @@ function SidebarContent({
             size="small"
             onClick={toggleSidebarCollapsed}
             aria-label={t('header.collapseNav')}
-            sx={{ color: alpha('#fff', 0.7), '&:hover': { color: '#fff' } }}
+            sx={{
+              color: alpha('#fff', 0.5),
+              '&:hover': { color: '#fff', bgcolor: alpha('#fff', 0.08) },
+            }}
           >
-            <MenuOpenRoundedIcon fontSize="small" />
+            <KeyboardDoubleArrowLeftRoundedIcon
+              fontSize="small"
+              sx={{
+                transform: (theme) =>
+                  theme.direction === 'rtl' ? 'scaleX(-1)' : 'none',
+              }}
+            />
           </IconButton>
         )}
-      </Toolbar>
+      </Box>
 
-      <Divider sx={{ borderColor: alpha('#fff', 0.08) }} />
+      <Divider sx={{ borderColor: alpha('#fff', 0.06), mx: collapsed ? 1.5 : 2 }} />
 
-      <Box sx={{ flex: 1, overflowY: 'auto', py: 1 }}>
+      <Box sx={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', py: 1.25 }}>
         <NavSection
           titleKey="nav.sectionGeneral"
           items={generalNav}
@@ -276,7 +328,9 @@ function SidebarContent({
           collapsed={collapsed}
           onNavigate={onNavigate}
         />
-        <Divider sx={{ mx: 2.5, my: 1, borderColor: alpha('#fff', 0.08) }} />
+        <Box sx={{ px: collapsed ? 1.5 : 2, my: 1 }}>
+          <Divider sx={{ borderColor: alpha('#fff', 0.06) }} />
+        </Box>
         <NavSection
           titleKey="nav.sectionSystem"
           items={systemNav}
@@ -286,19 +340,21 @@ function SidebarContent({
       </Box>
 
       {showCollapseToggle && collapsed && (
-        <Box sx={{ p: 1.25, display: 'grid', placeItems: 'center' }}>
+        <Box sx={{ p: 1.25, display: 'grid', placeItems: 'center', pb: 2 }}>
           <Tooltip title={t('header.expandNav')} placement="right">
             <IconButton
               size="small"
               onClick={toggleSidebarCollapsed}
               aria-label={t('header.expandNav')}
               sx={{
-                color: alpha('#fff', 0.7),
+                color: alpha('#fff', 0.55),
+                bgcolor: alpha('#fff', 0.05),
+                '&:hover': { color: '#fff', bgcolor: alpha('#fff', 0.1) },
                 transform: (theme) =>
                   theme.direction === 'rtl' ? 'none' : 'scaleX(-1)',
               }}
             >
-              <MenuOpenRoundedIcon fontSize="small" />
+              <KeyboardDoubleArrowLeftRoundedIcon fontSize="small" />
             </IconButton>
           </Tooltip>
         </Box>

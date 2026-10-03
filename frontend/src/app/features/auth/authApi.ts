@@ -3,9 +3,11 @@ import { baseQueryWithAuth } from '../../api/baseQuery';
 import type {
   AuthTokens,
   AuthUser,
+  ChangePasswordRequest,
   LoginRequest,
   OAuthProviders,
   RegisterRequest,
+  UpdateProfileRequest,
 } from './auth.types';
 
 export const authApi = createApi({
@@ -19,6 +21,28 @@ export const authApi = createApi({
     getMe: builder.query<AuthUser, void>({
       query: () => '/users/me',
       providesTags: ['Me'],
+    }),
+    updateProfile: builder.mutation<
+      AuthUser,
+      { id: number; body: UpdateProfileRequest }
+    >({
+      query: ({ id, body }) => ({
+        url: `/users/${id}`,
+        method: 'PATCH',
+        body,
+      }),
+      invalidatesTags: ['Me'],
+    }),
+    changePassword: builder.mutation<
+      { message: string },
+      ChangePasswordRequest
+    >({
+      query: (body) => ({
+        url: '/users/me/password',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['Me'],
     }),
     register: builder.mutation<AuthUser, RegisterRequest>({
       query: (body) => ({
@@ -61,6 +85,8 @@ export const authApi = createApi({
 export const {
   useGetOAuthProvidersQuery,
   useGetMeQuery,
+  useUpdateProfileMutation,
+  useChangePasswordMutation,
   useRegisterMutation,
   useLoginMutation,
   useRefreshMutation,

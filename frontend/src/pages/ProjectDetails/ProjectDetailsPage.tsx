@@ -14,15 +14,19 @@ import Grid from '@mui/material/Grid';
 import Skeleton from '@mui/material/Skeleton';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import { useTheme } from '@mui/material/styles';
-import { LineChart } from '@mui/x-charts/LineChart';
 import { useMemo, useState } from 'react';
 import { Link as RouterLink, useParams } from 'react-router-dom';
 import { getErrorMessage } from '../../app/api/apiError';
 import { useGetAnalyticsQuery } from '../../app/features/analytics/analyticsApi';
 import { useGetProjectByIdQuery } from '../../app/features/projects/projectsApi';
+import {
+  CashflowAreaChart,
+  CashflowLegendFooter,
+  ProfessionalChartCard,
+  sliceLastMonths,
+  type CashflowRange,
+} from '../../components/charts';
 import { useNotification } from '../../components/feedback/NotificationProvider';
-import { ChartCard } from '../../components/ui/ChartCard';
 import { StatCard } from '../../components/ui/StatCard';
 import { formatDateTime, formatMoney } from '../../i18n/format';
 import { useAppTranslation } from '../../i18n/useAppTranslation';
@@ -31,24 +35,17 @@ import { MaterialsPanel } from '../Materials/MaterialsPanel';
 import { ProjectFormDialog } from '../Projects/ProjectFormDialog';
 import { RevenuePanel } from '../Revenue/RevenuePanel';
 
-function formatMonthLabel(month: string, locale: string) {
-  const [year, monthPart] = month.split('-').map(Number);
-  const date = new Date(year, monthPart - 1, 1);
-  return new Intl.DateTimeFormat(locale, {
-    month: 'short',
-    year: '2-digit',
-  }).format(date);
-}
+const CHART_HEIGHT = 300;
 
 export function ProjectDetailsPage() {
   const { t, i18n } = useAppTranslation();
-  const theme = useTheme();
   const { id } = useParams();
   const projectId = Number(id);
   const validId = Number.isInteger(projectId) && projectId > 0;
 
   const { notify } = useNotification();
   const [editOpen, setEditOpen] = useState(false);
+  const [cashflowRange, setCashflowRange] = useState<CashflowRange>(12);
 
   const {
     data: project,
@@ -58,29 +55,37 @@ export function ProjectDetailsPage() {
     refetch,
   } = useGetProjectByIdQuery(projectId, { skip: !validId });
 
-  const { data: analytics, isLoading: analyticsLoading } = useGetAnalyticsQuery(
-    { projectId },
-    { skip: !validId },
+  const {
+    data: analytics,
+    isLoading: analyticsLoading,
+    isError: analyticsError,
+    refetch: refetchAnalytics,
+  } = useGetAnalyticsQuery({ projectId }, { skip: !validId });
+
+  const cashflowData = useMemo(
+    () => sliceLastMonths(analytics?.monthlyCashflow ?? [], cashflowRange),
+    [analytics?.monthlyCashflow, cashflowRange],
   );
 
-  const monthLabels = useMemo(
-    () =>
-      (analytics?.monthlyCashflow ?? []).map((point) =>
-        formatMonthLabel(point.month, i18n.language),
-      ),
-    [analytics?.monthlyCashflow, i18n.language],
+  const rangeRevenueTotal = useMemo(
+    () => cashflowData.reduce((sum, point) => sum + point.revenue, 0),
+    [cashflowData],
   );
-  const expenseSeries = useMemo(
-    () => (analytics?.monthlyCashflow ?? []).map((point) => point.expenses),
-    [analytics?.monthlyCashflow],
+  const rangeExpensesTotal = useMemo(
+    () => cashflowData.reduce((sum, point) => sum + point.expenses, 0),
+    [cashflowData],
   );
-  const revenueSeries = useMemo(
-    () => (analytics?.monthlyCashflow ?? []).map((point) => point.revenue),
-    [analytics?.monthlyCashflow],
+  const rangeProfitTotal = rangeRevenueTotal - rangeExpensesTotal;
+
+  const hasCashflow = cashflowData.some(
+    (point) => point.revenue > 0 || point.expenses > 0,
   );
-  const hasCashflow =
-    expenseSeries.some((value) => value > 0) ||
-    revenueSeries.some((value) => value > 0);
+
+  const cashflowRanges = [
+    { value: 3 as const, label: t('charts.range3m') },
+    { value: 6 as const, label: t('charts.range6m') },
+    { value: 12 as const, label: t('charts.range12m') },
+  ];
 
   if (!validId) {
     return (
@@ -166,50 +171,46 @@ export function ProjectDetailsPage() {
         </Button>
       </Stack>
 
-      <Grid container spacing={2.5}>
+      <Grid container spacing={2}>
         <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
           {analyticsLoading ? (
-            <Skeleton variant="rounded" height={110} />
+            <Skeleton variant="rounded" height={120} sx={{ borderRadius: 3 }} />
           ) : (
             <StatCard
               title={t('dashboard.totalRevenue')}
               value={formatMoney(summary?.totalRevenue ?? 0, i18n.language)}
               icon={<TrendingUpRoundedIcon />}
-              accent={theme.palette.success.main}
+              tone="revenue"
             />
           )}
         </Grid>
         <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
           {analyticsLoading ? (
-            <Skeleton variant="rounded" height={110} />
+            <Skeleton variant="rounded" height={120} sx={{ borderRadius: 3 }} />
           ) : (
             <StatCard
               title={t('dashboard.totalExpenses')}
               value={formatMoney(summary?.totalExpenses ?? 0, i18n.language)}
               icon={<PaymentsRoundedIcon />}
-              accent={theme.palette.error.main}
+              tone="expenses"
             />
           )}
         </Grid>
         <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
           {analyticsLoading ? (
-            <Skeleton variant="rounded" height={110} />
+            <Skeleton variant="rounded" height={120} sx={{ borderRadius: 3 }} />
           ) : (
             <StatCard
               title={t('dashboard.netProfit')}
               value={formatMoney(summary?.netProfit ?? 0, i18n.language)}
               icon={<AccountBalanceRoundedIcon />}
-              accent={
-                (summary?.netProfit ?? 0) >= 0
-                  ? theme.palette.success.main
-                  : theme.palette.error.main
-              }
+              tone="profit"
             />
           )}
         </Grid>
         <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
           {analyticsLoading ? (
-            <Skeleton variant="rounded" height={110} />
+            <Skeleton variant="rounded" height={120} sx={{ borderRadius: 3 }} />
           ) : (
             <StatCard
               title={t('dashboard.materialsCost')}
@@ -218,54 +219,54 @@ export function ProjectDetailsPage() {
                 i18n.language,
               )}
               icon={<Inventory2RoundedIcon />}
+              tone="neutral"
             />
           )}
         </Grid>
       </Grid>
 
-      <ChartCard
+      <ProfessionalChartCard
         title={t('dashboard.cashflowTitle')}
         subtitle={t('dashboard.cashflowSubtitle')}
+        kpiValue={
+          analyticsLoading
+            ? undefined
+            : formatMoney(rangeRevenueTotal, i18n.language)
+        }
+        ranges={cashflowRanges}
+        activeRange={cashflowRange}
+        onRangeChange={setCashflowRange}
+        loading={analyticsLoading}
         empty={!analyticsLoading && !hasCashflow}
         emptyLabel={t('analytics.emptyChart')}
+        error={analyticsError}
+        errorLabel={t('charts.loadError')}
+        retryLabel={t('common.retry')}
+        onRetry={() => void refetchAnalytics()}
+        height={CHART_HEIGHT}
+        footer={
+          hasCashflow ? (
+            <CashflowLegendFooter
+              revenueLabel={t('analytics.seriesRevenue')}
+              expensesLabel={t('analytics.seriesExpenses')}
+              profitLabel={t('charts.profitSeries')}
+              revenueTotal={rangeRevenueTotal}
+              expensesTotal={rangeExpensesTotal}
+              profitTotal={rangeProfitTotal}
+              language={i18n.language}
+            />
+          ) : undefined
+        }
       >
-        {analyticsLoading ? (
-          <Skeleton variant="rounded" height={300} />
-        ) : (
-          <LineChart
-            height={300}
-            series={[
-              {
-                data: revenueSeries,
-                label: t('analytics.seriesRevenue'),
-                color: theme.palette.success.main,
-                area: true,
-                showMark: false,
-                valueFormatter: (value) =>
-                  formatMoney(value ?? 0, i18n.language),
-              },
-              {
-                data: expenseSeries,
-                label: t('analytics.seriesExpenses'),
-                color: theme.palette.error.main,
-                area: true,
-                showMark: false,
-                valueFormatter: (value) =>
-                  formatMoney(value ?? 0, i18n.language),
-              },
-            ]}
-            xAxis={[
-              {
-                data: monthLabels,
-                scaleType: 'point',
-                tickLabelStyle: { fontSize: 11 },
-              },
-            ]}
-            margin={{ left: 16, right: 16, top: 24, bottom: 8 }}
-            grid={{ horizontal: true }}
-          />
-        )}
-      </ChartCard>
+        <CashflowAreaChart
+          data={cashflowData}
+          language={i18n.language}
+          height={CHART_HEIGHT}
+          revenueLabel={t('analytics.seriesRevenue')}
+          expensesLabel={t('analytics.seriesExpenses')}
+          profitLabel={t('charts.profitSeries')}
+        />
+      </ProfessionalChartCard>
 
       <Card>
         <CardContent>

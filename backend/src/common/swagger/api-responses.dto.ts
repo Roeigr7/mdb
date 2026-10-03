@@ -46,6 +46,12 @@ export class UserResponseDto {
 
   @ApiProperty()
   createdAt: Date;
+
+  @ApiProperty({
+    example: true,
+    description: 'Whether the account has a local password (false for OAuth-only)',
+  })
+  hasPassword: boolean;
 }
 
 export class PaginationMetaDto {
@@ -98,6 +104,40 @@ export class ProjectResponseDto {
 export class PaginatedProjectsResponseDto {
   @ApiProperty({ type: [ProjectResponseDto] })
   data: ProjectResponseDto[];
+
+  @ApiProperty({ type: PaginationMetaDto })
+  meta: PaginationMetaDto;
+}
+
+export class SupplierResponseDto {
+  @ApiProperty({ example: 1 })
+  id: number;
+
+  @ApiProperty({ example: 'מפעל פלדה צפון' })
+  name: string;
+
+  @ApiPropertyOptional({ example: 'sales@steel.co.il', nullable: true })
+  email: string | null;
+
+  @ApiPropertyOptional({ example: '03-1234567', nullable: true })
+  phone: string | null;
+
+  @ApiPropertyOptional({ example: 'ספק מועדף', nullable: true })
+  notes: string | null;
+
+  @ApiProperty({ example: 2 })
+  userId: number;
+
+  @ApiProperty()
+  createdAt: Date;
+
+  @ApiProperty()
+  updatedAt: Date;
+}
+
+export class PaginatedSuppliersResponseDto {
+  @ApiProperty({ type: [SupplierResponseDto] })
+  data: SupplierResponseDto[];
 
   @ApiProperty({ type: PaginationMetaDto })
   meta: PaginationMetaDto;

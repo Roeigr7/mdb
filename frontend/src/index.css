@@ -14,4 +14,27 @@ body,
 
 body {
   margin: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Tabular figures for financial data */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Smooth page content entrance */
+@keyframes mbd-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.mbd-page-enter {
+  animation: mbd-fade-up 220ms ease both;
 }

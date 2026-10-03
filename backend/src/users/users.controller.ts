@@ -6,6 +6,7 @@ import {
   Param,
   ParseIntPipe,
   Patch,
+  Post,
   Query,
   Req,
   UseGuards,
@@ -30,6 +31,7 @@ import {
   UserResponseDto,
 } from '../common/swagger/api-responses.dto.js';
 import { UserRole } from '../generated/prisma/client.js';
+import { ChangePasswordDto } from './dto/change-password.dto.js';
 import { GetUsersDto } from './dto/get-users.dto.js';
 import { UpdateUserDto } from './dto/update-user.dto.js';
 import { UsersService } from './users.service.js';
@@ -49,7 +51,9 @@ export class UsersController {
   })
   @ApiOkResponse({ type: PaginatedUsersResponseDto })
   @ApiUnauthorizedResponse({ description: 'Missing or invalid access token' })
-  @ApiForbiddenResponse({ description: 'Insufficient permissions (ADMIN required)' })
+  @ApiForbiddenResponse({
+    description: 'Insufficient permissions (ADMIN required)',
+  })
   getUsers(@Query() query: GetUsersDto) {
     return this.usersService.getUsers(query);
   }
@@ -62,6 +66,24 @@ export class UsersController {
   @ApiNotFoundResponse({ description: 'Authenticated user not found' })
   getMe(@Req() req: AuthenticatedRequest) {
     return this.usersService.getMe(req.user);
+  }
+
+  @Post('me/password')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({
+    summary: 'Change or set password for the authenticated user',
+    description:
+      'If the account already has a password, currentPassword is required. OAuth-only accounts can set a password without currentPassword.',
+  })
+  @ApiOkResponse({ type: MessageResponseDto })
+  @ApiUnauthorizedResponse({
+    description: 'Missing or invalid access token / wrong current password',
+  })
+  changePassword(
+    @Body() dto: ChangePasswordDto,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.usersService.changePassword(dto, req.user);
   }
 
   @Get(':id')

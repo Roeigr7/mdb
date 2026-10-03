@@ -10,6 +10,7 @@ import { isObserveEnabled, ObserveModule } from './observe.js';
 import { ProjectsModule } from './projects/projects.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { RevenueModule } from './revenue/revenue.module.js';
+import { SuppliersModule } from './suppliers/suppliers.module.js';
 import { UsersModule } from './users/users.module.js';
 
 const observeImports = isObserveEnabled()
@@ -38,6 +39,7 @@ const observeImports = isObserveEnabled()
     DocumentsModule,
     ExpensesModule,
     RevenueModule,
+    SuppliersModule,
     AuthModule,
     UsersModule,
   ],

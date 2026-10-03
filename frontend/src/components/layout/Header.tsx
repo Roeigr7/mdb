@@ -17,11 +17,11 @@ import TextField from '@mui/material/TextField';
 import Toolbar from '@mui/material/Toolbar';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
-import { useTheme } from '@mui/material/styles';
+import { alpha, useTheme } from '@mui/material/styles';
 import type { FormEvent } from 'react';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { useLogoutMutation } from '../../app/features/auth/authApi';
 import {
   clearCredentials,
@@ -31,68 +31,23 @@ import type { AppDispatch, RootState } from '../../app/store';
 import {
   DRAWER_WIDTH,
   DRAWER_WIDTH_COLLAPSED,
+  HEADER_HEIGHT,
+  tokens,
 } from '../../app/theme';
 import { LanguageSwitcher } from '../i18n/LanguageSwitcher';
 import { useAppTranslation } from '../../i18n/useAppTranslation';
 import { useLayout } from './LayoutContext';
+import type { BreadcrumbCrumb } from './usePageMeta';
 
 type HeaderProps = {
   title: string;
+  breadcrumbs: BreadcrumbCrumb[];
   onMenuClick: () => void;
 };
 
-function useBreadcrumbs(pathname: string) {
-  const { t } = useAppTranslation();
-
-  return useMemo(() => {
-    const crumbs: Array<{ label: string; to?: string }> = [
-      { label: t('nav.dashboard'), to: '/dashboard' },
-    ];
-
-    if (pathname.startsWith('/projects/') && pathname !== '/projects') {
-      crumbs.push({ label: t('nav.projects'), to: '/projects' });
-      crumbs.push({ label: t('projectDetails.title') });
-      return crumbs;
-    }
-    if (pathname.startsWith('/projects')) {
-      crumbs.push({ label: t('nav.projects') });
-      return crumbs;
-    }
-    if (pathname.startsWith('/materials')) {
-      crumbs.push({ label: t('nav.materials') });
-      return crumbs;
-    }
-    if (pathname.startsWith('/suppliers')) {
-      crumbs.push({ label: t('nav.suppliers') });
-      return crumbs;
-    }
-    if (pathname.startsWith('/expenses')) {
-      crumbs.push({ label: t('nav.expenses') });
-      return crumbs;
-    }
-    if (pathname.startsWith('/revenue')) {
-      crumbs.push({ label: t('nav.revenue') });
-      return crumbs;
-    }
-    if (pathname.startsWith('/reports') || pathname.startsWith('/analytics')) {
-      crumbs.push({ label: t('nav.reports') });
-      return crumbs;
-    }
-    if (pathname.startsWith('/settings')) {
-      crumbs.push({ label: t('nav.settings') });
-      return crumbs;
-    }
-    if (pathname.startsWith('/dashboard')) {
-      return [{ label: t('nav.dashboard') }];
-    }
-    return crumbs;
-  }, [pathname, t]);
-}
-
-export function Header({ title, onMenuClick }: HeaderProps) {
+export function Header({ title, breadcrumbs, onMenuClick }: HeaderProps) {
   const { t } = useAppTranslation();
   const theme = useTheme();
-  const location = useLocation();
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const { sidebarCollapsed } = useLayout();
@@ -101,7 +56,6 @@ export function Header({ title, onMenuClick }: HeaderProps) {
     (state: RootState) => state.auth.refreshToken,
   );
   const [logout] = useLogoutMutation();
-  const breadcrumbs = useBreadcrumbs(location.pathname);
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [notifAnchor, setNotifAnchor] = useState<null | HTMLElement>(null);
@@ -140,7 +94,6 @@ export function Header({ title, onMenuClick }: HeaderProps) {
       sx={{
         width: { md: `calc(100% - ${drawerWidth}px)` },
         marginInlineStart: { md: `${drawerWidth}px` },
-        bgcolor: 'rgba(255,255,255,0.9)',
         color: 'text.primary',
         transition: (muiTheme) =>
           muiTheme.transitions.create(['width', 'margin'], {
@@ -149,26 +102,48 @@ export function Header({ title, onMenuClick }: HeaderProps) {
           }),
       }}
     >
-      <Toolbar sx={{ gap: 1.5, minHeight: { xs: 64 } }}>
+      <Toolbar
+        sx={{
+          gap: 1.5,
+          minHeight: { xs: HEADER_HEIGHT },
+          height: HEADER_HEIGHT,
+          px: { xs: 2, sm: 3 },
+        }}
+      >
         <IconButton
           color="inherit"
           edge="start"
           onClick={onMenuClick}
-          sx={{ display: { md: 'none' } }}
+          sx={{
+            display: { md: 'none' },
+            border: '1px solid',
+            borderColor: 'divider',
+            borderRadius: 1.5,
+          }}
           aria-label={t('header.openNav')}
         >
-          <MenuIcon />
+          <MenuIcon fontSize="small" />
         </IconButton>
 
         <Box sx={{ minWidth: 0, flexGrow: 1 }}>
-          <Typography variant="h6" noWrap sx={{ fontWeight: 700, lineHeight: 1.2 }}>
+          <Typography
+            variant="h6"
+            noWrap
+            sx={{
+              fontWeight: 700,
+              lineHeight: 1.2,
+              fontSize: '1rem',
+              letterSpacing: '-0.02em',
+            }}
+          >
             {title}
           </Typography>
           <Breadcrumbs
             aria-label={t('header.breadcrumbs')}
             sx={{
               display: { xs: 'none', sm: 'flex' },
-              '& .MuiBreadcrumbs-separator': { mx: 0.75 },
+              mt: 0.15,
+              '& .MuiBreadcrumbs-ol': { flexWrap: 'nowrap' },
             }}
           >
             {breadcrumbs.map((crumb, index) => {
@@ -180,6 +155,7 @@ export function Header({ title, onMenuClick }: HeaderProps) {
                     variant="caption"
                     color="text.secondary"
                     noWrap
+                    sx={{ fontWeight: 500 }}
                   >
                     {crumb.label}
                   </Typography>
@@ -193,6 +169,7 @@ export function Header({ title, onMenuClick }: HeaderProps) {
                   underline="hover"
                   color="text.secondary"
                   variant="caption"
+                  sx={{ fontWeight: 500 }}
                 >
                   {crumb.label}
                 </Link>
@@ -204,7 +181,7 @@ export function Header({ title, onMenuClick }: HeaderProps) {
         <Box
           component="form"
           onSubmit={handleSearchSubmit}
-          sx={{ display: { xs: 'none', md: 'block' }, width: 260 }}
+          sx={{ display: { xs: 'none', md: 'block' }, width: 240 }}
         >
           <TextField
             size="small"
@@ -217,14 +194,34 @@ export function Header({ title, onMenuClick }: HeaderProps) {
               input: {
                 startAdornment: (
                   <InputAdornment position="start">
-                    <SearchRoundedIcon fontSize="small" color="action" />
+                    <SearchRoundedIcon
+                      sx={{ fontSize: 18, color: 'text.secondary' }}
+                    />
                   </InputAdornment>
                 ),
               },
             }}
             sx={{
               '& .MuiOutlinedInput-root': {
-                bgcolor: 'background.default',
+                bgcolor: alpha(tokens.ink[900], 0.025),
+                borderRadius: 2,
+                height: 36,
+                '& fieldset': {
+                  borderColor: 'transparent',
+                },
+                '&:hover': {
+                  bgcolor: alpha(tokens.ink[900], 0.04),
+                  '& fieldset': {
+                    borderColor: alpha(tokens.ink[900], 0.08),
+                  },
+                },
+                '&.Mui-focused': {
+                  bgcolor: '#fff',
+                  boxShadow: `0 0 0 3px ${alpha(tokens.teal[600], 0.12)}`,
+                  '& fieldset': {
+                    borderColor: alpha(tokens.teal[600], 0.35),
+                  },
+                },
               },
             }}
           />
@@ -237,9 +234,15 @@ export function Header({ title, onMenuClick }: HeaderProps) {
             color="inherit"
             aria-label={t('header.notifications')}
             onClick={(event) => setNotifAnchor(event.currentTarget)}
+            sx={{
+              border: '1px solid',
+              borderColor: 'divider',
+              width: 36,
+              height: 36,
+            }}
           >
             <Badge color="primary" variant="dot" invisible>
-              <NotificationsNoneRoundedIcon />
+              <NotificationsNoneRoundedIcon sx={{ fontSize: 20 }} />
             </Badge>
           </IconButton>
         </Tooltip>
@@ -259,18 +262,23 @@ export function Header({ title, onMenuClick }: HeaderProps) {
           color="inherit"
           onClick={(event) => setAnchorEl(event.currentTarget)}
           aria-label={t('header.account')}
-          sx={{ p: 0.5 }}
+          sx={{
+            p: 0.25,
+            border: '1px solid',
+            borderColor: 'divider',
+            borderRadius: 2,
+          }}
         >
           <Avatar
             sx={{
-              width: 34,
-              height: 34,
-              bgcolor: 'primary.main',
-              fontSize: 13,
+              width: 30,
+              height: 30,
+              bgcolor: tokens.ink[800],
+              fontSize: 11,
               fontWeight: 700,
             }}
           >
-            {user ? initials : <PersonOutlineRoundedIcon fontSize="small" />}
+            {user ? initials : <PersonOutlineRoundedIcon sx={{ fontSize: 16 }} />}
           </Avatar>
         </IconButton>
         <Menu
@@ -281,7 +289,15 @@ export function Header({ title, onMenuClick }: HeaderProps) {
           transformOrigin={{ vertical: 'top', horizontal: menuSide }}
         >
           {user?.email && (
-            <MenuItem disabled sx={{ opacity: '1 !important', typography: 'body2' }}>
+            <MenuItem
+              disabled
+              sx={{
+                opacity: '1 !important',
+                typography: 'caption',
+                color: 'text.secondary',
+                fontWeight: 500,
+              }}
+            >
               {user.email}
             </MenuItem>
           )}

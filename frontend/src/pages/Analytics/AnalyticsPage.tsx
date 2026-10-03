@@ -15,137 +15,37 @@ import MenuItem from '@mui/material/MenuItem';
 import Select from '@mui/material/Select';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import { useTheme } from '@mui/material/styles';
-import { BarChart } from '@mui/x-charts/BarChart';
-import { LineChart } from '@mui/x-charts/LineChart';
-import { PieChart } from '@mui/x-charts/PieChart';
-import { useMemo, useState, type ReactNode } from 'react';
-import { Link as RouterLink } from 'react-router-dom';
+import { useMemo, useState } from 'react';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { getErrorMessage } from '../../app/api/apiError';
 import { useGetAnalyticsQuery } from '../../app/features/analytics/analyticsApi';
 import { useGetProjectsQuery } from '../../app/features/projects/projectsApi';
-import { formatMoney } from '../../i18n/format';
+import {
+  AnalyticsDataTable,
+  CHART_COLORS,
+  ComparisonBarChart,
+  DynamicBreakdownCard,
+  DynamicCashflowCard,
+  DynamicProjectsCard,
+  MarginGauge,
+  ProfessionalChartCard,
+  StackedCashflowChart,
+  sliceLastMonths,
+  type CashflowRange,
+} from '../../components/charts';
+import { PageHeader } from '../../components/ui/PageHeader';
+import { StatCard } from '../../components/ui/StatCard';
+import { formatMoney, formatMonthKey } from '../../i18n/format';
 import { useAppTranslation } from '../../i18n/useAppTranslation';
 
 const CHART_HEIGHT = 300;
-
-type KpiCardProps = {
-  title: string;
-  value: string;
-  hint: string;
-  icon: ReactNode;
-  accent?: string;
-};
-
-function KpiCard({ title, value, hint, icon, accent }: KpiCardProps) {
-  return (
-    <Card sx={{ height: '100%' }}>
-      <CardContent>
-        <Stack
-          direction="row"
-          spacing={1.5}
-          sx={{ justifyContent: 'space-between', alignItems: 'flex-start' }}
-        >
-          <Box sx={{ minWidth: 0 }}>
-            <Typography variant="body2" color="text.secondary" gutterBottom>
-              {title}
-            </Typography>
-            <Typography
-              variant="h4"
-              sx={{
-                fontWeight: 700,
-                letterSpacing: '-0.02em',
-                color: accent ?? 'text.primary',
-              }}
-            >
-              {value}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              {hint}
-            </Typography>
-          </Box>
-          <Box
-            sx={{
-              width: 44,
-              height: 44,
-              borderRadius: 2,
-              display: 'grid',
-              placeItems: 'center',
-              bgcolor: 'rgba(30, 58, 95, 0.08)',
-              color: 'primary.main',
-              flexShrink: 0,
-            }}
-          >
-            {icon}
-          </Box>
-        </Stack>
-      </CardContent>
-    </Card>
-  );
-}
-
-type ChartCardProps = {
-  title: string;
-  subtitle: string;
-  children: ReactNode;
-  empty?: boolean;
-  emptyLabel: string;
-};
-
-function ChartCard({
-  title,
-  subtitle,
-  children,
-  empty,
-  emptyLabel,
-}: ChartCardProps) {
-  return (
-    <Card sx={{ height: '100%' }}>
-      <CardContent sx={{ height: '100%' }}>
-        <Stack spacing={0.5} sx={{ mb: 2 }}>
-          <Typography variant="h6" component="h2">
-            {title}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {subtitle}
-          </Typography>
-        </Stack>
-        {empty ? (
-          <Box
-            sx={{
-              height: CHART_HEIGHT,
-              display: 'grid',
-              placeItems: 'center',
-              borderRadius: 2,
-              bgcolor: 'action.hover',
-            }}
-          >
-            <Typography variant="body2" color="text.secondary">
-              {emptyLabel}
-            </Typography>
-          </Box>
-        ) : (
-          children
-        )}
-      </CardContent>
-    </Card>
-  );
-}
-
-function formatMonthLabel(month: string, locale: string) {
-  const [year, monthPart] = month.split('-').map(Number);
-  const date = new Date(year, monthPart - 1, 1);
-  return new Intl.DateTimeFormat(locale, {
-    month: 'short',
-    year: '2-digit',
-  }).format(date);
-}
-
 const ALL_PROJECTS = 'all';
 
 export function AnalyticsPage() {
   const { t, i18n } = useAppTranslation();
-  const theme = useTheme();
+  const navigate = useNavigate();
+  const [cashflowRange, setCashflowRange] = useState<CashflowRange>(12);
+
   const {
     data: projectsData,
     isLoading: projectsLoading,
@@ -171,43 +71,48 @@ export function AnalyticsPage() {
     { skip: projectsLoading || projects.length === 0 },
   );
 
+  const cashflowData = useMemo(
+    () => sliceLastMonths(data?.monthlyCashflow ?? [], cashflowRange),
+    [cashflowRange, data?.monthlyCashflow],
+  );
+
   const monthLabels = useMemo(
-    () =>
-      (data?.monthlyCashflow ?? []).map((point) =>
-        formatMonthLabel(point.month, i18n.language),
-      ),
-    [data?.monthlyCashflow, i18n.language],
+    () => cashflowData.map((point) => formatMonthKey(point.month, i18n.language)),
+    [cashflowData, i18n.language],
   );
 
   const expenseSeries = useMemo(
-    () => (data?.monthlyCashflow ?? []).map((point) => point.expenses),
-    [data?.monthlyCashflow],
+    () => cashflowData.map((point) => point.expenses),
+    [cashflowData],
   );
   const revenueSeries = useMemo(
-    () => (data?.monthlyCashflow ?? []).map((point) => point.revenue),
-    [data?.monthlyCashflow],
+    () => cashflowData.map((point) => point.revenue),
+    [cashflowData],
   );
 
-  const categoryPie = useMemo(
+  const categoryDonut = useMemo(
     () =>
-      (data?.expensesByCategory ?? []).map((item, index) => ({
-        id: index,
+      (data?.expensesByCategory ?? []).map((item) => ({
+        id: item.label,
         value: item.amount,
-        label: item.label === 'Uncategorized' ? t('analytics.uncategorized') : item.label,
+        label:
+          item.label === 'Uncategorized'
+            ? t('analytics.uncategorized')
+            : item.label,
       })),
     [data?.expensesByCategory, t],
   );
 
-  const statusPie = useMemo(
+  const statusDonut = useMemo(
     () =>
-      (data?.revenueByStatus ?? []).map((item, index) => {
+      (data?.revenueByStatus ?? []).map((item) => {
         const status = item.label;
         const label =
           status === 'PAID' || status === 'PENDING' || status === 'CANCELLED'
             ? t(`revenue.statuses.${status}`)
             : status;
         return {
-          id: index,
+          id: status,
           value: item.amount,
           label,
         };
@@ -215,40 +120,68 @@ export function AnalyticsPage() {
     [data?.revenueByStatus, t],
   );
 
-  const materialLabels = useMemo(
-    () => (data?.topMaterials ?? []).map((item) => item.label),
+  const materialsBreakdown = useMemo(
+    () =>
+      (data?.topMaterials ?? []).map((item) => ({
+        id: item.label,
+        label: item.label,
+        value: item.amount,
+      })),
     [data?.topMaterials],
   );
-  const materialValues = useMemo(
-    () => (data?.topMaterials ?? []).map((item) => item.amount),
-    [data?.topMaterials],
+
+  const projectBreakdown = data?.projectBreakdown ?? [];
+  const showProjectExplorer =
+    selected === ALL_PROJECTS && projectBreakdown.length > 0;
+
+  const hasCashflow =
+    expenseSeries.some((value) => value > 0) ||
+    revenueSeries.some((value) => value > 0);
+
+  const cashflowRanges = [
+    { value: 3 as const, label: t('charts.range3m') },
+    { value: 6 as const, label: t('charts.range6m') },
+    { value: 12 as const, label: t('charts.range12m') },
+  ];
+
+  const monthlyRows = useMemo(
+    () =>
+      [...(data?.monthlyCashflow ?? [])]
+        .slice()
+        .reverse()
+        .map((point) => ({
+          month: point.month,
+          revenue: point.revenue,
+          expenses: point.expenses,
+          profit: point.revenue - point.expenses,
+        })),
+    [data?.monthlyCashflow],
   );
 
-  const projectLabels = useMemo(
-    () => (data?.projectBreakdown ?? []).map((item) => item.projectName),
-    [data?.projectBreakdown],
-  );
-  const projectExpenseValues = useMemo(
-    () => (data?.projectBreakdown ?? []).map((item) => item.expenses),
-    [data?.projectBreakdown],
-  );
-  const projectRevenueValues = useMemo(
-    () => (data?.projectBreakdown ?? []).map((item) => item.revenue),
-    [data?.projectBreakdown],
+  const projectRows = useMemo(
+    () =>
+      [...projectBreakdown]
+        .map((item) => ({
+          ...item,
+          profit: item.revenue - item.expenses,
+          margin:
+            item.revenue > 0
+              ? ((item.revenue - item.expenses) / item.revenue) * 100
+              : 0,
+        }))
+        .sort((a, b) => b.revenue - a.revenue),
+    [projectBreakdown],
   );
 
-  const hasCashflow = expenseSeries.some((v) => v > 0) || revenueSeries.some((v) => v > 0);
-  const showProjectChart =
-    selected === ALL_PROJECTS && (data?.projectBreakdown.length ?? 0) > 1;
+  const categoryTotal = useMemo(
+    () => categoryDonut.reduce((sum, item) => sum + item.value, 0),
+    [categoryDonut],
+  );
 
-  const currencyValueFormatter = (value: number | null) =>
-    formatMoney(value ?? 0, i18n.language);
-
-  const axisValueFormatter = (value: number | null) =>
-    new Intl.NumberFormat(i18n.language.startsWith('en') ? 'en-US' : 'he-IL', {
-      notation: 'compact',
-      maximumFractionDigits: 1,
-    }).format(value ?? 0);
+  const materialsTotal = useMemo(
+    () => materialsBreakdown.reduce((sum, item) => sum + item.value, 0),
+    [materialsBreakdown],
+  );
 
   if (projectsLoading) {
     return (
@@ -260,41 +193,31 @@ export function AnalyticsPage() {
 
   return (
     <Stack spacing={3}>
-      <Stack
-        direction={{ xs: 'column', md: 'row' }}
-        spacing={2}
-        sx={{
-          justifyContent: 'space-between',
-          alignItems: { xs: 'stretch', md: 'flex-end' },
-        }}
-      >
-        <Box>
-          <Typography variant="h4" component="h1" gutterBottom>
-            {t('analytics.title')}
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
-            {t('analytics.subtitle')}
-          </Typography>
-        </Box>
-        <FormControl sx={{ minWidth: { xs: '100%', md: 280 } }}>
-          <InputLabel id="analytics-project-label">
-            {t('analytics.scope')}
-          </InputLabel>
-          <Select
-            labelId="analytics-project-label"
-            label={t('analytics.scope')}
-            value={selected}
-            onChange={(event) => setSelected(String(event.target.value))}
-          >
-            <MenuItem value={ALL_PROJECTS}>{t('analytics.allProjects')}</MenuItem>
-            {projects.map((project) => (
-              <MenuItem key={project.id} value={String(project.id)}>
-                {project.name}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-      </Stack>
+      <PageHeader
+        title={t('analytics.title')}
+        subtitle={t('analytics.subtitle')}
+        hideTitle
+        actions={
+          <FormControl sx={{ minWidth: { xs: '100%', md: 260 } }} size="small">
+            <InputLabel id="analytics-project-label">
+              {t('analytics.scope')}
+            </InputLabel>
+            <Select
+              labelId="analytics-project-label"
+              label={t('analytics.scope')}
+              value={selected}
+              onChange={(event) => setSelected(String(event.target.value))}
+            >
+              <MenuItem value={ALL_PROJECTS}>{t('analytics.allProjects')}</MenuItem>
+              {projects.map((project) => (
+                <MenuItem key={project.id} value={String(project.id)}>
+                  {project.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        }
+      />
 
       {(projectsError || isError) && (
         <Alert
@@ -345,44 +268,45 @@ export function AnalyticsPage() {
             </Typography>
           )}
 
-          <Grid container spacing={2.5}>
+          <Grid container spacing={2}>
             <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
-              <KpiCard
+              <StatCard
                 title={t('analytics.kpiRevenue')}
                 value={formatMoney(data.summary.totalRevenue, i18n.language)}
                 hint={t('analytics.kpiRevenueHint', {
                   count: data.summary.revenueCount,
                 })}
                 icon={<TrendingUpRoundedIcon />}
-                accent={theme.palette.success.main}
+                tone="revenue"
+                sparkline={revenueSeries}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
-              <KpiCard
+              <StatCard
                 title={t('analytics.kpiExpenses')}
                 value={formatMoney(data.summary.totalExpenses, i18n.language)}
                 hint={t('analytics.kpiExpensesHint', {
                   count: data.summary.expenseCount,
                 })}
                 icon={<PaymentsRoundedIcon />}
-                accent={theme.palette.error.main}
+                tone="expenses"
+                sparkline={expenseSeries}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
-              <KpiCard
+              <StatCard
                 title={t('analytics.kpiNet')}
                 value={formatMoney(data.summary.netProfit, i18n.language)}
                 hint={t('analytics.kpiNetHint')}
                 icon={<AccountBalanceRoundedIcon />}
-                accent={
-                  data.summary.netProfit >= 0
-                    ? theme.palette.success.main
-                    : theme.palette.error.main
-                }
+                tone="profit"
+                sparkline={cashflowData.map(
+                  (point) => point.revenue - point.expenses,
+                )}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
-              <KpiCard
+              <StatCard
                 title={t('analytics.kpiMaterials')}
                 value={formatMoney(
                   data.summary.totalMaterialsCost,
@@ -392,212 +316,445 @@ export function AnalyticsPage() {
                   count: data.summary.materialsCount,
                 })}
                 icon={<Inventory2RoundedIcon />}
+                tone="neutral"
               />
             </Grid>
           </Grid>
 
-          <Grid container spacing={2.5}>
-            <Grid size={{ xs: 12, lg: 8 }}>
-              <ChartCard
-                title={t('analytics.cashflowTitle')}
-                subtitle={t('analytics.cashflowSubtitle')}
-                empty={!hasCashflow}
+          <Grid container spacing={2}>
+            <Grid size={{ xs: 12 }}>
+              <DynamicCashflowCard
+                data={data.monthlyCashflow ?? []}
+                language={i18n.language}
+                title={t('analytics.dynamicTitle')}
+                subtitle={t('analytics.dynamicSubtitle')}
+                revenueLabel={t('analytics.seriesRevenue')}
+                expensesLabel={t('analytics.seriesExpenses')}
+                profitLabel={t('charts.profitSeries')}
+                viewLabel={t('charts.viewMode')}
+                periodLabel={t('charts.period')}
+                showProfitLabel={t('charts.showProfit')}
+                overviewLabel={t('charts.viewOverview')}
+                revenueOnlyLabel={t('charts.viewRevenue')}
+                expensesOnlyLabel={t('charts.viewExpenses')}
+                netOnlyLabel={t('charts.viewNet')}
                 emptyLabel={t('analytics.emptyChart')}
-              >
-                <LineChart
-                  height={CHART_HEIGHT}
-                  series={[
-                    {
-                      data: revenueSeries,
-                      label: t('analytics.seriesRevenue'),
-                      color: theme.palette.success.main,
-                      area: true,
-                      showMark: false,
-                      valueFormatter: currencyValueFormatter,
-                    },
-                    {
-                      data: expenseSeries,
-                      label: t('analytics.seriesExpenses'),
-                      color: theme.palette.error.main,
-                      area: true,
-                      showMark: false,
-                      valueFormatter: currencyValueFormatter,
-                    },
-                  ]}
-                  xAxis={[
-                    {
-                      data: monthLabels,
-                      scaleType: 'point',
-                      tickLabelStyle: { fontSize: 11 },
-                    },
-                  ]}
-                  yAxis={[
-                    {
-                      valueFormatter: axisValueFormatter,
-                    },
-                  ]}
-                  margin={{ left: 16, right: 16, top: 24, bottom: 8 }}
-                  grid={{ horizontal: true }}
-                />
-              </ChartCard>
+                rangeLabels={cashflowRanges}
+                height={CHART_HEIGHT + 24}
+              />
             </Grid>
 
-            <Grid size={{ xs: 12, lg: 4 }}>
-              <ChartCard
-                title={t('analytics.expenseMixTitle')}
-                subtitle={t('analytics.expenseMixSubtitle')}
-                empty={categoryPie.length === 0}
+            <Grid size={{ xs: 12, md: 4 }}>
+              <ProfessionalChartCard
+                title={t('analytics.marginTitle')}
+                subtitle={t('analytics.marginHint')}
+                height={CHART_HEIGHT}
+                empty={data.summary.totalRevenue <= 0}
                 emptyLabel={t('analytics.emptyChart')}
               >
-                <PieChart
-                  height={CHART_HEIGHT}
-                  series={[
-                    {
-                      data: categoryPie,
-                      innerRadius: 55,
-                      outerRadius: 100,
-                      paddingAngle: 2,
-                      cornerRadius: 4,
-                      valueFormatter: (item) =>
-                        formatMoney(item.value, i18n.language),
-                    },
-                  ]}
-                  margin={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                <MarginGauge
+                  revenue={data.summary.totalRevenue}
+                  expenses={data.summary.totalExpenses}
+                  label={t('analytics.marginTitle')}
+                  hint={t('analytics.marginHint')}
+                  height={CHART_HEIGHT - 40}
                 />
-              </ChartCard>
+              </ProfessionalChartCard>
+            </Grid>
+
+            <Grid size={{ xs: 12, md: 8 }}>
+              <ProfessionalChartCard
+                title={t('analytics.stackedTitle')}
+                subtitle={t('analytics.stackedSubtitle')}
+                ranges={cashflowRanges}
+                activeRange={cashflowRange}
+                onRangeChange={setCashflowRange}
+                empty={!hasCashflow}
+                emptyLabel={t('analytics.emptyChart')}
+                height={CHART_HEIGHT}
+              >
+                <StackedCashflowChart
+                  categories={monthLabels}
+                  revenue={revenueSeries}
+                  expenses={expenseSeries}
+                  revenueLabel={t('analytics.seriesRevenue')}
+                  expensesLabel={t('analytics.seriesExpenses')}
+                  language={i18n.language}
+                  height={CHART_HEIGHT}
+                />
+              </ProfessionalChartCard>
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
-              <ChartCard
-                title={t('analytics.monthlyCompareTitle')}
-                subtitle={t('analytics.monthlyCompareSubtitle')}
-                empty={!hasCashflow}
+              <DynamicBreakdownCard
+                title={t('analytics.dynamicBreakdownTitle')}
+                subtitle={t('analytics.dynamicBreakdownSubtitle')}
+                data={categoryDonut}
+                language={i18n.language}
+                chartTypeLabel={t('charts.chartType')}
+                sortLabel={t('charts.sortBy')}
+                donutLabel={t('charts.typeDonut')}
+                barsLabel={t('charts.typeBars')}
+                sortHighLabel={t('charts.sortHigh')}
+                sortLowLabel={t('charts.sortLow')}
                 emptyLabel={t('analytics.emptyChart')}
-              >
-                <BarChart
-                  height={CHART_HEIGHT}
-                  series={[
-                    {
-                      data: revenueSeries,
-                      label: t('analytics.seriesRevenue'),
-                      color: theme.palette.success.main,
-                      valueFormatter: currencyValueFormatter,
-                    },
-                    {
-                      data: expenseSeries,
-                      label: t('analytics.seriesExpenses'),
-                      color: theme.palette.error.main,
-                      valueFormatter: currencyValueFormatter,
-                    },
-                  ]}
-                  xAxis={[
-                    {
-                      data: monthLabels,
-                      scaleType: 'band',
-                      tickLabelStyle: { fontSize: 11 },
-                    },
-                  ]}
-                  margin={{ left: 16, right: 16, top: 24, bottom: 8 }}
-                  grid={{ horizontal: true }}
-                  borderRadius={6}
-                />
-              </ChartCard>
+                centerLabel={t('charts.totalCenter')}
+                otherLabel={t('charts.otherCategory')}
+                seriesLabel={t('analytics.seriesExpenses')}
+                height={CHART_HEIGHT}
+              />
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
-              <ChartCard
-                title={t('analytics.revenueStatusTitle')}
-                subtitle={t('analytics.revenueStatusSubtitle')}
-                empty={statusPie.length === 0}
-                emptyLabel={t('analytics.emptyChart')}
-              >
-                <PieChart
-                  height={CHART_HEIGHT}
-                  series={[
-                    {
-                      data: statusPie,
-                      outerRadius: 100,
-                      paddingAngle: 2,
-                      cornerRadius: 4,
-                      valueFormatter: (item) =>
-                        formatMoney(item.value, i18n.language),
-                    },
-                  ]}
-                  margin={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                />
-              </ChartCard>
-            </Grid>
-
-            <Grid size={{ xs: 12, lg: showProjectChart ? 6 : 12 }}>
-              <ChartCard
+              <DynamicBreakdownCard
                 title={t('analytics.materialsTitle')}
                 subtitle={t('analytics.materialsSubtitle')}
-                empty={materialValues.length === 0}
+                data={materialsBreakdown}
+                language={i18n.language}
+                chartTypeLabel={t('charts.chartType')}
+                sortLabel={t('charts.sortBy')}
+                donutLabel={t('charts.typeDonut')}
+                barsLabel={t('charts.typeBars')}
+                sortHighLabel={t('charts.sortHigh')}
+                sortLowLabel={t('charts.sortLow')}
                 emptyLabel={t('analytics.emptyChart')}
-              >
-                <BarChart
-                  height={CHART_HEIGHT}
-                  layout="horizontal"
-                  series={[
-                    {
-                      data: materialValues,
-                      label: t('analytics.seriesMaterials'),
-                      color: theme.palette.primary.main,
-                      valueFormatter: currencyValueFormatter,
-                    },
-                  ]}
-                  yAxis={[
-                    {
-                      data: materialLabels,
-                      scaleType: 'band',
-                      width: 110,
-                    },
-                  ]}
-                  margin={{ left: 8, right: 24, top: 24, bottom: 8 }}
-                  grid={{ vertical: true }}
-                  borderRadius={6}
-                />
-              </ChartCard>
+                centerLabel={t('charts.totalCenter')}
+                otherLabel={t('charts.otherCategory')}
+                seriesLabel={t('analytics.seriesMaterials')}
+                height={CHART_HEIGHT}
+              />
             </Grid>
 
-            {showProjectChart && (
-              <Grid size={{ xs: 12, lg: 6 }}>
-                <ChartCard
+            <Grid size={{ xs: 12, md: 6 }}>
+              <ProfessionalChartCard
+                title={t('analytics.monthlyCompareTitle')}
+                subtitle={t('analytics.monthlyCompareSubtitle')}
+                ranges={cashflowRanges}
+                activeRange={cashflowRange}
+                onRangeChange={setCashflowRange}
+                empty={!hasCashflow}
+                emptyLabel={t('analytics.emptyChart')}
+                height={CHART_HEIGHT}
+              >
+                <ComparisonBarChart
+                  categories={monthLabels}
+                  series={[
+                    {
+                      id: 'revenue',
+                      label: t('analytics.seriesRevenue'),
+                      data: revenueSeries,
+                    },
+                    {
+                      id: 'expenses',
+                      label: t('analytics.seriesExpenses'),
+                      data: expenseSeries,
+                    },
+                  ]}
+                  language={i18n.language}
+                  height={CHART_HEIGHT}
+                />
+              </ProfessionalChartCard>
+            </Grid>
+
+            <Grid size={{ xs: 12, md: 6 }}>
+              <ProfessionalChartCard
+                title={t('analytics.revenueStatusTitle')}
+                subtitle={t('analytics.revenueStatusSubtitle')}
+                empty={statusDonut.length === 0}
+                emptyLabel={t('analytics.emptyChart')}
+                height={CHART_HEIGHT}
+              >
+                <ComparisonBarChart
+                  categories={statusDonut.map((item) => item.label)}
+                  series={[
+                    {
+                      id: 'status',
+                      label: t('analytics.seriesRevenue'),
+                      data: statusDonut.map((item) => item.value),
+                      color: CHART_COLORS.profit,
+                    },
+                  ]}
+                  language={i18n.language}
+                  height={CHART_HEIGHT}
+                />
+              </ProfessionalChartCard>
+            </Grid>
+
+            {showProjectExplorer && (
+              <Grid size={{ xs: 12 }}>
+                <DynamicProjectsCard
                   title={t('analytics.projectsTitle')}
                   subtitle={t('analytics.projectsSubtitle')}
-                  empty={projectLabels.length === 0}
+                  data={projectBreakdown}
+                  language={i18n.language}
+                  metricLabel={t('charts.metric')}
+                  chartTypeLabel={t('charts.chartType')}
+                  revenueLabel={t('analytics.seriesRevenue')}
+                  expensesLabel={t('analytics.seriesExpenses')}
+                  profitLabel={t('charts.profitSeries')}
+                  materialsLabel={t('analytics.seriesMaterials')}
+                  barsLabel={t('charts.typeBars')}
+                  radarLabel={t('charts.typeRadar')}
+                  scatterLabel={t('charts.typeScatter')}
                   emptyLabel={t('analytics.emptyChart')}
-                >
-                  <BarChart
-                    height={CHART_HEIGHT}
-                    series={[
-                      {
-                        data: projectRevenueValues,
-                        label: t('analytics.seriesRevenue'),
-                        color: theme.palette.success.main,
-                        valueFormatter: currencyValueFormatter,
-                      },
-                      {
-                        data: projectExpenseValues,
-                        label: t('analytics.seriesExpenses'),
-                        color: theme.palette.error.main,
-                        valueFormatter: currencyValueFormatter,
-                      },
-                    ]}
-                    xAxis={[
-                      {
-                        data: projectLabels,
-                        scaleType: 'band',
-                        tickLabelStyle: { fontSize: 11 },
-                      },
-                    ]}
-                    margin={{ left: 16, right: 16, top: 24, bottom: 8 }}
-                    grid={{ horizontal: true }}
-                    borderRadius={6}
-                  />
-                </ChartCard>
+                  height={CHART_HEIGHT + 20}
+                  onProjectClick={(id) => navigate(`/projects/${id}`)}
+                />
               </Grid>
             )}
+          </Grid>
+
+          <Box sx={{ pt: 1 }}>
+            <Typography variant="h6" sx={{ fontWeight: 800, letterSpacing: '-0.02em' }}>
+              {t('analytics.tablesSectionTitle')}
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.35, mb: 2 }}>
+              {t('analytics.tablesSectionSubtitle')}
+            </Typography>
+          </Box>
+
+          <Grid container spacing={2}>
+            <Grid size={{ xs: 12, lg: 6 }}>
+              <AnalyticsDataTable
+                title={t('analytics.tableMonthlyTitle')}
+                subtitle={t('analytics.tableMonthlySubtitle')}
+                emptyLabel={t('analytics.emptyChart')}
+                rows={monthlyRows}
+                getRowKey={(row) => row.month}
+                columns={[
+                  {
+                    id: 'month',
+                    label: t('analytics.colMonth'),
+                    render: (row) => (
+                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                        {formatMonthKey(row.month, i18n.language)}
+                      </Typography>
+                    ),
+                  },
+                  {
+                    id: 'revenue',
+                    label: t('analytics.colRevenue'),
+                    align: 'right',
+                    render: (row) => (
+                      <Typography
+                        variant="body2"
+                        className="tabular-nums"
+                        sx={{ color: CHART_COLORS.revenue, fontWeight: 600 }}
+                      >
+                        {formatMoney(row.revenue, i18n.language)}
+                      </Typography>
+                    ),
+                  },
+                  {
+                    id: 'expenses',
+                    label: t('analytics.colExpenses'),
+                    align: 'right',
+                    render: (row) => (
+                      <Typography
+                        variant="body2"
+                        className="tabular-nums"
+                        sx={{ color: CHART_COLORS.expenses, fontWeight: 600 }}
+                      >
+                        {formatMoney(row.expenses, i18n.language)}
+                      </Typography>
+                    ),
+                  },
+                  {
+                    id: 'profit',
+                    label: t('analytics.colProfit'),
+                    align: 'right',
+                    render: (row) => (
+                      <Typography
+                        variant="body2"
+                        className="tabular-nums"
+                        sx={{
+                          color:
+                            row.profit >= 0
+                              ? CHART_COLORS.profit
+                              : CHART_COLORS.expenses,
+                          fontWeight: 700,
+                        }}
+                      >
+                        {formatMoney(row.profit, i18n.language)}
+                      </Typography>
+                    ),
+                  },
+                ]}
+              />
+            </Grid>
+
+            <Grid size={{ xs: 12, lg: 6 }}>
+              <AnalyticsDataTable
+                title={t('analytics.tableProjectsTitle')}
+                subtitle={t('analytics.tableProjectsSubtitle')}
+                emptyLabel={t('analytics.emptyChart')}
+                rows={projectRows}
+                getRowKey={(row) => row.projectId}
+                onRowClick={(row) => navigate(`/projects/${row.projectId}`)}
+                columns={[
+                  {
+                    id: 'project',
+                    label: t('analytics.colProject'),
+                    render: (row) => (
+                      <Typography variant="body2" sx={{ fontWeight: 650 }}>
+                        {row.projectName}
+                      </Typography>
+                    ),
+                  },
+                  {
+                    id: 'revenue',
+                    label: t('analytics.colRevenue'),
+                    align: 'right',
+                    render: (row) => (
+                      <span className="tabular-nums">
+                        {formatMoney(row.revenue, i18n.language)}
+                      </span>
+                    ),
+                  },
+                  {
+                    id: 'expenses',
+                    label: t('analytics.colExpenses'),
+                    align: 'right',
+                    render: (row) => (
+                      <span className="tabular-nums">
+                        {formatMoney(row.expenses, i18n.language)}
+                      </span>
+                    ),
+                  },
+                  {
+                    id: 'profit',
+                    label: t('analytics.colProfit'),
+                    align: 'right',
+                    render: (row) => (
+                      <Typography
+                        variant="body2"
+                        className="tabular-nums"
+                        sx={{
+                          fontWeight: 700,
+                          color:
+                            row.profit >= 0
+                              ? CHART_COLORS.profit
+                              : CHART_COLORS.expenses,
+                        }}
+                      >
+                        {formatMoney(row.profit, i18n.language)}
+                      </Typography>
+                    ),
+                  },
+                  {
+                    id: 'margin',
+                    label: t('analytics.colMargin'),
+                    align: 'right',
+                    render: (row) => (
+                      <Typography
+                        variant="body2"
+                        className="tabular-nums"
+                        color="text.secondary"
+                        sx={{ fontWeight: 600 }}
+                      >
+                        {row.margin.toFixed(0)}%
+                      </Typography>
+                    ),
+                  },
+                ]}
+              />
+            </Grid>
+
+            <Grid size={{ xs: 12, lg: 6 }}>
+              <AnalyticsDataTable
+                title={t('analytics.tableCategoriesTitle')}
+                subtitle={t('analytics.tableCategoriesSubtitle')}
+                emptyLabel={t('analytics.emptyChart')}
+                rows={[...categoryDonut].sort((a, b) => b.value - a.value)}
+                getRowKey={(row) => row.id}
+                columns={[
+                  {
+                    id: 'category',
+                    label: t('analytics.colCategory'),
+                    render: (row) => (
+                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                        {row.label}
+                      </Typography>
+                    ),
+                  },
+                  {
+                    id: 'amount',
+                    label: t('analytics.colAmount'),
+                    align: 'right',
+                    render: (row) => (
+                      <span className="tabular-nums">
+                        {formatMoney(row.value, i18n.language)}
+                      </span>
+                    ),
+                  },
+                  {
+                    id: 'share',
+                    label: t('analytics.colShare'),
+                    align: 'right',
+                    render: (row) => (
+                      <Typography
+                        variant="body2"
+                        className="tabular-nums"
+                        color="text.secondary"
+                        sx={{ fontWeight: 600 }}
+                      >
+                        {categoryTotal > 0
+                          ? `${((row.value / categoryTotal) * 100).toFixed(0)}%`
+                          : '—'}
+                      </Typography>
+                    ),
+                  },
+                ]}
+              />
+            </Grid>
+
+            <Grid size={{ xs: 12, lg: 6 }}>
+              <AnalyticsDataTable
+                title={t('analytics.tableMaterialsTitle')}
+                subtitle={t('analytics.tableMaterialsSubtitle')}
+                emptyLabel={t('analytics.emptyChart')}
+                rows={[...materialsBreakdown].sort((a, b) => b.value - a.value)}
+                getRowKey={(row) => row.id}
+                columns={[
+                  {
+                    id: 'material',
+                    label: t('analytics.colMaterial'),
+                    render: (row) => (
+                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                        {row.label}
+                      </Typography>
+                    ),
+                  },
+                  {
+                    id: 'amount',
+                    label: t('analytics.colAmount'),
+                    align: 'right',
+                    render: (row) => (
+                      <span className="tabular-nums">
+                        {formatMoney(row.value, i18n.language)}
+                      </span>
+                    ),
+                  },
+                  {
+                    id: 'share',
+                    label: t('analytics.colShare'),
+                    align: 'right',
+                    render: (row) => (
+                      <Typography
+                        variant="body2"
+                        className="tabular-nums"
+                        color="text.secondary"
+                        sx={{ fontWeight: 600 }}
+                      >
+                        {materialsTotal > 0
+                          ? `${((row.value / materialsTotal) * 100).toFixed(0)}%`
+                          : '—'}
+                      </Typography>
+                    ),
+                  },
+                ]}
+              />
+            </Grid>
           </Grid>
         </>
       )}

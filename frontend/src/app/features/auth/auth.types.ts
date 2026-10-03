@@ -24,4 +24,16 @@ export type AuthUser = {
   name: string;
   email: string;
   createdAt: string;
+  /** Present from /users/me; may be missing on older register responses */
+  hasPassword?: boolean;
+};
+
+export type UpdateProfileRequest = {
+  name?: string;
+  email?: string;
+};
+
+export type ChangePasswordRequest = {
+  currentPassword?: string;
+  newPassword: string;
 };

@@ -12,6 +12,7 @@ import { useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { getErrorMessage } from '../../app/api/apiError';
 import { useGetProjectsQuery } from '../../app/features/projects/projectsApi';
+import { PageHeader } from '../../components/ui/PageHeader';
 import { useAppTranslation } from '../../i18n/useAppTranslation';
 import { RevenuePanel } from './RevenuePanel';
 
@@ -27,14 +28,40 @@ export function RevenuePage() {
 
   return (
     <Stack spacing={3}>
-      <Box>
-        <Typography variant="h4" component="h1" gutterBottom>
-          {t('revenue.title')}
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          {t('revenue.subtitle')}
-        </Typography>
-      </Box>
+      <PageHeader
+        title={t('revenue.title')}
+        subtitle={t('revenue.subtitle')}
+        hideTitle
+        actions={
+          !isLoading && projects.length > 0 ? (
+            <FormControl sx={{ minWidth: { xs: '100%', sm: 280 } }} size="small">
+              <InputLabel id="revenue-project-label">
+                {t('revenue.project')}
+              </InputLabel>
+              <Select
+                labelId="revenue-project-label"
+                label={t('revenue.project')}
+                value={projectId}
+                displayEmpty
+                onChange={(event) =>
+                  setSelectedProjectId(Number(event.target.value))
+                }
+              >
+                {projectId === '' && (
+                  <MenuItem value="" disabled>
+                    {t('revenue.chooseProject')}
+                  </MenuItem>
+                )}
+                {projects.map((project) => (
+                  <MenuItem key={project.id} value={project.id}>
+                    {project.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          ) : undefined
+        }
+      />
 
       {isError && (
         <Alert
@@ -65,40 +92,12 @@ export function RevenuePage() {
             {t('revenue.goToProjects')}
           </Button>
         </Box>
+      ) : projectId === '' ? (
+        <Typography variant="body2" color="text.secondary">
+          {t('revenue.chooseProject')}
+        </Typography>
       ) : (
-        <>
-          <FormControl sx={{ maxWidth: 420 }} fullWidth>
-            <InputLabel id="revenue-project-label">
-              {t('revenue.project')}
-            </InputLabel>
-            <Select
-              labelId="revenue-project-label"
-              label={t('revenue.project')}
-              value={projectId}
-              displayEmpty
-              onChange={(event) => setSelectedProjectId(Number(event.target.value))}
-            >
-              {projectId === '' && (
-                <MenuItem value="" disabled>
-                  {t('revenue.chooseProject')}
-                </MenuItem>
-              )}
-              {projects.map((project) => (
-                <MenuItem key={project.id} value={project.id}>
-                  {project.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-
-          {projectId === '' ? (
-            <Typography variant="body2" color="text.secondary">
-              {t('revenue.chooseProject')}
-            </Typography>
-          ) : (
-            <RevenuePanel projectId={projectId} />
-          )}
-        </>
+        <RevenuePanel projectId={projectId} />
       )}
     </Stack>
   );

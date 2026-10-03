@@ -18,6 +18,7 @@ import { useExchangeOAuthCodeMutation } from '../../app/features/auth/authApi';
 import { establishSession } from '../../app/features/auth/establishSession';
 import { selectIsAuthenticated } from '../../app/features/auth/authSlice';
 import type { AppDispatch } from '../../app/store';
+import { tokens } from '../../app/theme';
 import { useAppTranslation } from '../../i18n/useAppTranslation';
 
 export function AuthCallbackPage() {
@@ -37,8 +38,8 @@ export function AuthCallbackPage() {
 
     void (async () => {
       try {
-        const tokens = await exchange({ code }).unwrap();
-        await establishSession(dispatch, tokens);
+        const authTokens = await exchange({ code }).unwrap();
+        await establishSession(dispatch, authTokens);
         navigate('/dashboard', { replace: true });
       } catch (err) {
         setError(
@@ -60,8 +61,8 @@ export function AuthCallbackPage() {
         placeItems: 'center',
         px: 2,
         background: `
-          radial-gradient(ellipse 70% 50% at 20% 10%, ${alpha('#1a365d', 0.12)}, transparent),
-          #f3f6fb
+          radial-gradient(ellipse 70% 50% at 20% 10%, ${alpha(tokens.teal[600], 0.1)}, transparent),
+          ${tokens.slate[50]}
         `,
       }}
     >

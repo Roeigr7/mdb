@@ -15,6 +15,7 @@ describe('UsersController', () => {
     getUserById: ReturnType<typeof vi.fn>;
     updateUser: ReturnType<typeof vi.fn>;
     deleteUser: ReturnType<typeof vi.fn>;
+    changePassword: ReturnType<typeof vi.fn>;
   };
 
   const req = {
@@ -32,6 +33,7 @@ describe('UsersController', () => {
       getUserById: vi.fn(),
       updateUser: vi.fn(),
       deleteUser: vi.fn(),
+      changePassword: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({

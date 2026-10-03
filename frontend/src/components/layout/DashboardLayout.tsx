@@ -1,45 +1,28 @@
 import Box from '@mui/material/Box';
-import Toolbar from '@mui/material/Toolbar';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import {
   DRAWER_WIDTH,
   DRAWER_WIDTH_COLLAPSED,
+  HEADER_HEIGHT,
 } from '../../app/theme';
-import { useAppTranslation } from '../../i18n/useAppTranslation';
 import { Header } from './Header';
 import { LayoutProvider, useLayout } from './LayoutContext';
 import { Sidebar } from './Sidebar';
+import { usePageMeta } from './usePageMeta';
 
 function LayoutShell() {
-  const { t } = useAppTranslation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const { sidebarCollapsed } = useLayout();
   const drawerWidth = sidebarCollapsed ? DRAWER_WIDTH_COLLAPSED : DRAWER_WIDTH;
-
-  const title = useMemo(() => {
-    const pathname = location.pathname;
-    if (pathname.startsWith('/projects/') && pathname !== '/projects') {
-      return t('projectDetails.title');
-    }
-    if (pathname.startsWith('/projects')) return t('projects.title');
-    if (pathname.startsWith('/materials')) return t('materials.title');
-    if (pathname.startsWith('/suppliers')) return t('comingSoon.suppliersTitle');
-    if (pathname.startsWith('/expenses')) return t('expenses.title');
-    if (pathname.startsWith('/revenue')) return t('revenue.title');
-    if (pathname.startsWith('/reports') || pathname.startsWith('/analytics')) {
-      return t('analytics.title');
-    }
-    if (pathname.startsWith('/settings')) return t('comingSoon.settingsTitle');
-    if (pathname.startsWith('/dashboard')) return t('dashboard.title');
-    return t('header.fallbackTitle');
-  }, [location.pathname, t]);
+  const { title, breadcrumbs } = usePageMeta();
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh' }}>
+    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
       <Header
         title={title}
+        breadcrumbs={breadcrumbs}
         onMenuClick={() => setMobileOpen((open) => !open)}
       />
       <Sidebar
@@ -60,8 +43,17 @@ function LayoutShell() {
             }),
         }}
       >
-        <Toolbar />
-        <Box sx={{ p: { xs: 2, sm: 3 } }}>
+        <Box sx={{ height: HEADER_HEIGHT, flexShrink: 0 }} />
+        <Box
+          className="mbd-page-enter"
+          key={location.pathname}
+          sx={{
+            p: { xs: 2, sm: 2.5, lg: 3 },
+            maxWidth: 1440,
+            mx: 'auto',
+            width: '100%',
+          }}
+        >
           <Outlet />
         </Box>
       </Box>
