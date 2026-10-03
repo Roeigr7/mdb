@@ -121,20 +121,20 @@ export function CashflowAreaChart({
         sx={{
           ...chartAxisSx(theme),
           '& .MuiAreaElement-series-revenue': {
-            fillOpacity: 0.18,
+            fillOpacity: 0.15,
           },
           '& .MuiAreaElement-series-expenses': {
-            fillOpacity: 0.14,
+            fillOpacity: 0.11,
           },
           '& .MuiLineElement-series-revenue': {
-            strokeWidth: 2.25,
+            strokeWidth: 2.15,
           },
           '& .MuiLineElement-series-expenses': {
-            strokeWidth: 2.1,
+            strokeWidth: 2,
           },
           '& .MuiLineElement-series-profit': {
-            strokeWidth: 2,
-            opacity: 0.95,
+            strokeWidth: 1.9,
+            opacity: 0.92,
           },
         }}
       />

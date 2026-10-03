@@ -42,28 +42,28 @@ export const tokens = {
     infoSoft: '#E8F1F8',
   },
   /**
-   * Data-viz palette — calm, colorblind-friendlier, finance-standard.
-   * Blue (inflows) + terracotta (outflows) + teal (net). Mid saturation.
+   * Data-viz palette — premium SaaS, low visual fatigue.
+   * Soft cobalt / dusty rose / teal. Distinguishable, not neon.
    */
   chart: {
-    /** Inflows — calm blue */
-    revenue: '#5B8DEF',
-    /** Outflows — warm terracotta (not alert-red) */
-    expenses: '#E07A5F',
-    /** Net — muted teal */
-    profit: '#3D9B8F',
-    /** Materials / single series — soft amber */
-    materials: '#D4A05A',
-    /** Multi-category — Tableau-style muted set */
+    /** Inflows — soft cobalt */
+    revenue: '#4F7CEC',
+    /** Outflows — dusty rose (warm, not alert) */
+    expenses: '#C97B84',
+    /** Net — calm teal */
+    profit: '#3A9E8F',
+    /** Materials / single series — muted gold */
+    materials: '#C9A66B',
+    /** Multi-category — soft categorical set */
     palette: [
-      '#5B8DEF',
-      '#3D9B8F',
-      '#E07A5F',
-      '#D4A05A',
-      '#8B7EC8',
-      '#6BA3B8',
-      '#C9867A',
-      '#8FA3B0',
+      '#4F7CEC',
+      '#3A9E8F',
+      '#C97B84',
+      '#C9A66B',
+      '#7B6DB0',
+      '#5B9BB5',
+      '#B8956E',
+      '#8B97A8',
     ],
   },
   radius: {

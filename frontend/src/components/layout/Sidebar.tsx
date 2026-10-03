@@ -373,7 +373,7 @@ export function Sidebar({ mobileOpen, onClose }: SidebarProps) {
   return (
     <Box
       component="nav"
-      sx={{ width: { md: desktopWidth }, flexShrink: { md: 0 } }}
+      sx={{ width: { lg: desktopWidth }, flexShrink: { lg: 0 } }}
       aria-label={t('nav.aria')}
     >
       <Drawer
@@ -383,7 +383,7 @@ export function Sidebar({ mobileOpen, onClose }: SidebarProps) {
         onClose={onClose}
         ModalProps={{ keepMounted: true }}
         sx={{
-          display: { xs: 'block', md: 'none' },
+          display: { xs: 'block', lg: 'none' },
           '& .MuiDrawer-paper': {
             boxSizing: 'border-box',
             width: DRAWER_WIDTH,
@@ -400,7 +400,7 @@ export function Sidebar({ mobileOpen, onClose }: SidebarProps) {
         anchor="left"
         open
         sx={{
-          display: { xs: 'none', md: 'block' },
+          display: { xs: 'none', lg: 'block' },
           '& .MuiDrawer-paper': {
             boxSizing: 'border-box',
             width: desktopWidth,

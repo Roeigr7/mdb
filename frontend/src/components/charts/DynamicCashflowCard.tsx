@@ -370,22 +370,22 @@ export function DynamicCashflowCard({
                 sx={{
                   ...chartAxisSx(theme),
                   '& .MuiAreaElement-series-revenue': {
-                    fillOpacity: 0.18,
+                    fillOpacity: 0.15,
                   },
                   '& .MuiAreaElement-series-expenses': {
-                    fillOpacity: 0.14,
+                    fillOpacity: 0.11,
                   },
                   '& .MuiAreaElement-series-profit': {
-                    fillOpacity: 0.12,
+                    fillOpacity: 0.1,
                   },
                   '& .MuiLineElement-series-revenue': {
-                    strokeWidth: 2.25,
+                    strokeWidth: 2.15,
                   },
                   '& .MuiLineElement-series-expenses': {
-                    strokeWidth: 2.1,
+                    strokeWidth: 2,
                   },
                   '& .MuiLineElement-series-profit': {
-                    strokeWidth: viewMode === 'net' ? 2.25 : 2,
+                    strokeWidth: viewMode === 'net' ? 2.15 : 1.9,
                   },
                 }}
               />

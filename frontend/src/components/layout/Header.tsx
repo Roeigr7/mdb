@@ -92,8 +92,8 @@ export function Header({ title, breadcrumbs, onMenuClick }: HeaderProps) {
       position="fixed"
       color="inherit"
       sx={{
-        width: { md: `calc(100% - ${drawerWidth}px)` },
-        marginInlineStart: { md: `${drawerWidth}px` },
+        width: { lg: `calc(100% - ${drawerWidth}px)` },
+        marginInlineStart: { lg: `${drawerWidth}px` },
         color: 'text.primary',
         transition: (muiTheme) =>
           muiTheme.transitions.create(['width', 'margin'], {
@@ -115,7 +115,7 @@ export function Header({ title, breadcrumbs, onMenuClick }: HeaderProps) {
           edge="start"
           onClick={onMenuClick}
           sx={{
-            display: { md: 'none' },
+            display: { lg: 'none' },
             border: '1px solid',
             borderColor: 'divider',
             borderRadius: 1.5,

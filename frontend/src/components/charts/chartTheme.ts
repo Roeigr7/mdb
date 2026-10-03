@@ -4,15 +4,15 @@ import type { SxProps, Theme } from '@mui/material/styles';
 import { tokens } from '../../app/theme';
 
 /**
- * Chart colors — calm mid-saturation set for white SaaS surfaces.
- * Blue / terracotta / teal: readable, low fatigue, colorblind-friendlier.
+ * Chart colors — soft cobalt / dusty rose / teal on white cards.
+ * Mid-low saturation for comfort; series stay clearly separable.
  */
 export const CHART_COLORS = {
   revenue: tokens.chart.revenue,
   expenses: tokens.chart.expenses,
   profit: tokens.chart.profit,
   materials: tokens.chart.materials,
-  secondary: '#8FA3B0',
+  secondary: '#8B97A8',
   palette: [...tokens.chart.palette],
 } as const;
 
@@ -196,21 +196,22 @@ export function chartAxisSx(theme: Theme): SxProps<Theme> {
       letterSpacing: '-0.01em',
     },
     '& .MuiChartsGrid-line': {
-      stroke: alpha(ink, 0.055),
+      stroke: alpha(ink, 0.045),
       strokeDasharray: '0',
     },
     '& .MuiLineElement-root': {
-      strokeWidth: 2.1,
+      strokeWidth: 2,
       strokeLinecap: 'round',
       strokeLinejoin: 'round',
     },
     '& .MuiAreaElement-root': {
-      fillOpacity: 0.14,
+      fillOpacity: 0.12,
     },
     '& .MuiBarElement-root': {
+      opacity: 0.92,
       transition: 'opacity 120ms ease',
       '&:hover': {
-        opacity: 0.88,
+        opacity: 1,
       },
     },
     '& .MuiPieArc-root': {

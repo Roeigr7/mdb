@@ -33,7 +33,7 @@ function LayoutShell() {
         component="main"
         sx={{
           flexGrow: 1,
-          width: { md: `calc(100% - ${drawerWidth}px)` },
+          width: { lg: `calc(100% - ${drawerWidth}px)` },
           bgcolor: 'background.default',
           minHeight: '100vh',
           transition: (theme) =>
