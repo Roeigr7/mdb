@@ -92,7 +92,7 @@ export function DynamicProjectsCard({
         ? CHART_COLORS.profit
         : metric === 'materials'
           ? CHART_COLORS.materials
-          : CHART_COLORS.revenue;
+          : CHART_COLORS.profit;
 
   const metricSeriesLabel =
     metric === 'expenses'

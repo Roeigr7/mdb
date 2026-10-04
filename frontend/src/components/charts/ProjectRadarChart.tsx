@@ -42,6 +42,13 @@ export function ProjectRadarChart({
   const maxExpenses = Math.max(...top.map((item) => item.expenses), 1);
   const maxMaterials = Math.max(...top.map((item) => item.materialsCost), 1);
 
+  const projectColors = [
+    CHART_COLORS.profit,
+    ...CHART_COLORS.palette.filter(
+      (color) => color !== CHART_COLORS.revenue && color !== CHART_COLORS.profit,
+    ),
+  ];
+
   const series = top.map((item, index) => ({
     id: String(item.id),
     label: item.label,
@@ -50,7 +57,7 @@ export function ProjectRadarChart({
       (item.expenses / maxExpenses) * 100,
       (item.materialsCost / maxMaterials) * 100,
     ],
-    color: CHART_COLORS.palette[index % CHART_COLORS.palette.length],
+    color: projectColors[index % projectColors.length],
     fillArea: true,
     hideMark: false,
   }));
