@@ -43,7 +43,7 @@ export function ProjectRadarChart({
   const maxMaterials = Math.max(...top.map((item) => item.materialsCost), 1);
 
   const projectColors = [
-    CHART_COLORS.profit,
+    CHART_COLORS.revenue,
     ...CHART_COLORS.palette.filter(
       (color) => color !== CHART_COLORS.revenue && color !== CHART_COLORS.profit,
     ),

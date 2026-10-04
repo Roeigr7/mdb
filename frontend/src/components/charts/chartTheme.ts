@@ -4,7 +4,7 @@ import type { SxProps, Theme } from '@mui/material/styles';
 import { tokens } from '../../app/theme';
 
 /**
- * Chart colors — blue inflow, vermillion outflow, emerald net.
+ * Chart colors — emerald inflow, vermillion outflow, deeper emerald net.
  * Same hues as the categorical palette so legends and series match.
  */
 export const CHART_COLORS = {

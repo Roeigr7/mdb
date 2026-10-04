@@ -47,7 +47,7 @@ export function ProjectScatterChart({
             id: 'projects',
             data: points,
             label: revenueAxisLabel,
-            color: CHART_COLORS.profit,
+            color: CHART_COLORS.revenue,
             markerSize: 8,
             valueFormatter: (value) => {
               if (!value) return '';

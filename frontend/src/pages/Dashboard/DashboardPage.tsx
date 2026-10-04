@@ -524,7 +524,7 @@ export function DashboardPage() {
                   const profitColor =
                     finance && finance.profit < 0
                       ? 'error.main'
-                      : tokens.chart.revenue;
+                      : tokens.chart.profit;
                   return (
                     <TableRow
                       key={project.id}

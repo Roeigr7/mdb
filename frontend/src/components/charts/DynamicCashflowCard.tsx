@@ -109,21 +109,18 @@ export function DynamicCashflowCard({
     return revenue.reduce((sum, value) => sum + value, 0);
   }, [viewMode, revenue, expenses, profit]);
 
-  const inflowColor = CHART_COLORS.profit;
-  const profitLineColor = tokens.chart.profitLine;
-
   const kpiColor =
     viewMode === 'expenses'
       ? CHART_COLORS.expenses
       : viewMode === 'net'
-        ? profitLineColor
-        : inflowColor;
+        ? CHART_COLORS.profit
+        : CHART_COLORS.revenue;
 
   const legendItems = [
     {
       id: 'revenue',
       label: revenueLabel,
-      color: inflowColor,
+      color: CHART_COLORS.revenue,
       visible: viewMode === 'overview' || viewMode === 'revenue',
     },
     {
@@ -135,7 +132,7 @@ export function DynamicCashflowCard({
     {
       id: 'profit',
       label: profitLabel,
-      color: profitLineColor,
+      color: CHART_COLORS.profit,
       visible:
         viewMode === 'net' || (viewMode === 'overview' && showProfit),
     },
@@ -302,7 +299,7 @@ export function DynamicCashflowCard({
                           id: 'revenue',
                           data: revenue,
                           label: revenueLabel,
-                          color: inflowColor,
+                          color: CHART_COLORS.revenue,
                           area: true,
                           curve: 'monotoneX' as const,
                           showMark: false,
@@ -330,7 +327,7 @@ export function DynamicCashflowCard({
                           id: 'profit',
                           data: profit,
                           label: profitLabel,
-                          color: profitLineColor,
+                          color: CHART_COLORS.profit,
                           area: viewMode === 'net',
                           curve: 'monotoneX' as const,
                           showMark: false,

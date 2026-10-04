@@ -42,26 +42,23 @@ export const tokens = {
     infoSoft: '#E8F1F8',
   },
   /**
-   * Data-viz palette — the blue / vermillion / emerald set used in
-   * finance dashboards (Tableau, Tremor). Even weight on white, and
-   * neighboring hues stay distinct for donuts and radar charts.
+   * Data-viz palette — emerald inflows, vermillion outflows, a deeper
+   * emerald for net so the two greens stay distinct on the same chart.
    */
   chart: {
     /** Inflows */
-    revenue: '#2563EB',
+    revenue: '#059669',
     /** Outflows — vermillion, distinct from error red */
     expenses: '#EA580C',
-    /** Net */
-    profit: '#059669',
-    /** Net line when it sits on a green inflow fill */
-    profitLine: '#047857',
+    /** Net — darker than inflows when both are on one chart */
+    profit: '#047857',
     /** Materials / fourth series */
     materials: '#7C3AED',
     /** Multi-category — warm and cool alternating */
     palette: [
-      '#2563EB',
-      '#EA580C',
       '#059669',
+      '#EA580C',
+      '#047857',
       '#7C3AED',
       '#0891B2',
       '#DB2777',
