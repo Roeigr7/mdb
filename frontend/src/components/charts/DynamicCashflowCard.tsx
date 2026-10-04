@@ -110,8 +110,7 @@ export function DynamicCashflowCard({
   }, [viewMode, revenue, expenses, profit]);
 
   const inflowColor = CHART_COLORS.profit;
-  /** Darker green so the profit line stays readable on the green inflow fill. */
-  const profitLineColor = '#047857';
+  const profitLineColor = tokens.chart.profitLine;
 
   const kpiColor =
     viewMode === 'expenses'

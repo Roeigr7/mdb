@@ -53,6 +53,8 @@ export const tokens = {
     expenses: '#EA580C',
     /** Net */
     profit: '#059669',
+    /** Net line when it sits on a green inflow fill */
+    profitLine: '#047857',
     /** Materials / fourth series */
     materials: '#7C3AED',
     /** Multi-category — warm and cool alternating */
@@ -656,7 +658,7 @@ export function createAppTheme(direction: Direction) {
       MuiToggleButton: {
         styleOverrides: {
           root: {
-            borderRadius: `${tokens.radius.xs}px !important`,
+            borderRadius: tokens.radius.xs,
             textTransform: 'none',
             fontWeight: 600,
             fontSize: '0.75rem',
@@ -684,6 +686,11 @@ export function createAppTheme(direction: Direction) {
             '& .MuiToggleButtonGroup-grouped': {
               border: 0,
               margin: 0,
+              borderRadius: tokens.radius.xs,
+              '&:not(:first-of-type), &:not(:last-of-type)': {
+                borderRadius: tokens.radius.xs,
+                marginLeft: 0,
+              },
             },
           },
         },

@@ -38,7 +38,7 @@ import {
   sliceLastMonths,
   type CashflowRange,
 } from '../../components/charts';
-import { DashboardSkeleton } from '../../components/ui/ChartCard';
+import { DashboardSkeleton } from '../../components/ui/DashboardSkeleton';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { StatCard } from '../../components/ui/StatCard';
 import { formatDate, formatMoney } from '../../i18n/format';

@@ -5,7 +5,6 @@ import PersonOutlineRoundedIcon from '@mui/icons-material/PersonOutlineRounded';
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import AppBar from '@mui/material/AppBar';
 import Avatar from '@mui/material/Avatar';
-import Badge from '@mui/material/Badge';
 import Box from '@mui/material/Box';
 import Breadcrumbs from '@mui/material/Breadcrumbs';
 import IconButton from '@mui/material/IconButton';
@@ -241,9 +240,7 @@ export function Header({ title, breadcrumbs, onMenuClick }: HeaderProps) {
               height: 36,
             }}
           >
-            <Badge color="primary" variant="dot" invisible>
-              <NotificationsNoneRoundedIcon sx={{ fontSize: 20 }} />
-            </Badge>
+            <NotificationsNoneRoundedIcon sx={{ fontSize: 20 }} />
           </IconButton>
         </Tooltip>
         <Menu
@@ -253,9 +250,13 @@ export function Header({ title, breadcrumbs, onMenuClick }: HeaderProps) {
           anchorOrigin={{ vertical: 'bottom', horizontal: menuSide }}
           transformOrigin={{ vertical: 'top', horizontal: menuSide }}
         >
-          <MenuItem disabled sx={{ opacity: '1 !important', typography: 'body2' }}>
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{ px: 2, py: 1.25 }}
+          >
             {t('header.noNotifications')}
-          </MenuItem>
+          </Typography>
         </Menu>
 
         <IconButton
@@ -289,17 +290,13 @@ export function Header({ title, breadcrumbs, onMenuClick }: HeaderProps) {
           transformOrigin={{ vertical: 'top', horizontal: menuSide }}
         >
           {user?.email && (
-            <MenuItem
-              disabled
-              sx={{
-                opacity: '1 !important',
-                typography: 'caption',
-                color: 'text.secondary',
-                fontWeight: 500,
-              }}
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              sx={{ display: 'block', px: 2, py: 1, fontWeight: 500 }}
             >
               {user.email}
-            </MenuItem>
+            </Typography>
           )}
           <MenuItem
             onClick={() => {
