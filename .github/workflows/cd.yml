@@ -35,6 +35,13 @@ jobs:
       run:
         working-directory: backend
 
+    # prisma generate (postinstall) loads prisma.config.ts, which requires
+    # DATABASE_URL to be present. It does not connect. Use the production
+    # secret when it exists; otherwise a non-routable placeholder so install
+    # can finish before a host is connected.
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://placeholder:placeholder@db.invalid:5432/mbd' }}
+
     # Production secrets MUST come from the GitHub Environment / secret manager.
     # Do NOT hardcode DATABASE_URL, JWT_SECRET, or other secrets here.
     # Expected Environment secrets/variables (set later when hosting is chosen):
