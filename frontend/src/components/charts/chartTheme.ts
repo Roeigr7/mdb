@@ -4,15 +4,15 @@ import type { SxProps, Theme } from '@mui/material/styles';
 import { tokens } from '../../app/theme';
 
 /**
- * Chart colors — luminous periwinkle / peach / aqua.
- * Soft fills read as layered and polished on white surfaces.
+ * Chart colors — blue inflow, vermillion outflow, emerald net.
+ * Same hues as the categorical palette so legends and series match.
  */
 export const CHART_COLORS = {
   revenue: tokens.chart.revenue,
   expenses: tokens.chart.expenses,
   profit: tokens.chart.profit,
   materials: tokens.chart.materials,
-  secondary: '#A8B5C4',
+  secondary: '#64748B',
   palette: [...tokens.chart.palette],
 } as const;
 
@@ -205,10 +205,10 @@ export function chartAxisSx(theme: Theme): SxProps<Theme> {
       strokeLinejoin: 'round',
     },
     '& .MuiAreaElement-root': {
-      fillOpacity: 0.12,
+      fillOpacity: 0.13,
     },
     '& .MuiBarElement-root': {
-      opacity: 0.92,
+      opacity: 1,
       transition: 'opacity 120ms ease',
       '&:hover': {
         opacity: 1,

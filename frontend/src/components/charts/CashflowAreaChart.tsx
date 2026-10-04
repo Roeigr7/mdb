@@ -127,14 +127,14 @@ export function CashflowAreaChart({
             fillOpacity: 0.12,
           },
           '& .MuiLineElement-series-revenue': {
-            strokeWidth: 2.15,
+            strokeWidth: 2.25,
           },
           '& .MuiLineElement-series-expenses': {
-            strokeWidth: 2,
+            strokeWidth: 2.15,
           },
           '& .MuiLineElement-series-profit': {
-            strokeWidth: 1.9,
-            opacity: 0.92,
+            strokeWidth: 2,
+            opacity: 1,
           },
         }}
       />

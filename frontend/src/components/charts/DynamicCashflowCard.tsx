@@ -376,16 +376,16 @@ export function DynamicCashflowCard({
                     fillOpacity: 0.12,
                   },
                   '& .MuiAreaElement-series-profit': {
-                    fillOpacity: 0.11,
+                    fillOpacity: 0.1,
                   },
                   '& .MuiLineElement-series-revenue': {
-                    strokeWidth: 2.15,
+                    strokeWidth: 2.25,
                   },
                   '& .MuiLineElement-series-expenses': {
-                    strokeWidth: 2,
+                    strokeWidth: 2.15,
                   },
                   '& .MuiLineElement-series-profit': {
-                    strokeWidth: viewMode === 'net' ? 2.15 : 1.9,
+                    strokeWidth: viewMode === 'net' ? 2.25 : 2,
                   },
                 }}
               />

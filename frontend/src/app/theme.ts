@@ -42,28 +42,29 @@ export const tokens = {
     infoSoft: '#E8F1F8',
   },
   /**
-   * Data-viz palette — luminous, harmonious, easy on white cards.
-   * Periwinkle + peach + aqua (pretty without neon).
+   * Data-viz palette — the blue / vermillion / emerald set used in
+   * finance dashboards (Tableau, Tremor). Even weight on white, and
+   * neighboring hues stay distinct for donuts and radar charts.
    */
   chart: {
-    /** Inflows — soft periwinkle */
-    revenue: '#6C8EFF',
-    /** Outflows — peach coral */
-    expenses: '#FF9F7A',
-    /** Net — aqua mint */
-    profit: '#5ECFB2',
-    /** Materials / single series — champagne */
-    materials: '#E8C07A',
-    /** Multi-category — soft luminous set */
+    /** Inflows */
+    revenue: '#2563EB',
+    /** Outflows — vermillion, distinct from error red */
+    expenses: '#EA580C',
+    /** Net */
+    profit: '#059669',
+    /** Materials / fourth series */
+    materials: '#7C3AED',
+    /** Multi-category — warm and cool alternating */
     palette: [
-      '#6C8EFF',
-      '#5ECFB2',
-      '#FF9F7A',
-      '#E8C07A',
-      '#B39DDB',
-      '#7EC8E3',
-      '#F2A7C3',
-      '#A8B5C4',
+      '#2563EB',
+      '#EA580C',
+      '#059669',
+      '#7C3AED',
+      '#0891B2',
+      '#DB2777',
+      '#D97706',
+      '#475569',
     ],
   },
   radius: {
