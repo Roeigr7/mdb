@@ -33,20 +33,31 @@ export function chartTooltipPaperSx(theme: Theme): SxProps<Theme> {
   const ink = theme.palette.text.primary;
 
   return {
-    borderRadius: '10px !important',
-    border: `1px solid ${alpha(ink, 0.08)}`,
-    boxShadow:
-      '0 2px 6px rgba(15, 23, 42, 0.05), 0 12px 28px rgba(15, 23, 42, 0.1)',
-    backgroundImage: 'none',
-    bgcolor: theme.palette.background.paper,
-    // Grow with content — never force wrap / split LTR-RTL money strings
-    width: 'max-content',
-    maxWidth: 'none',
-    minWidth: 0,
-    overflow: 'hidden',
-    padding: '4px 0',
-    // Keep tooltip chrome in page direction; isolate values separately
-    direction: theme.direction,
+    // The Popper is only a positioner. Drawing a frame here as well as on
+    // the inner paper is what shows up as two boxes.
+    background: 'transparent',
+    backgroundColor: 'transparent',
+    border: 'none',
+    boxShadow: 'none',
+    padding: 0,
+    margin: 0,
+    overflow: 'visible',
+
+    [`& .${chartsTooltipClasses.paper}`]: {
+      borderRadius: '10px',
+      border: `1px solid ${alpha(ink, 0.08)}`,
+      boxShadow:
+        '0 2px 6px rgba(15, 23, 42, 0.05), 0 12px 28px rgba(15, 23, 42, 0.1)',
+      backgroundImage: 'none',
+      bgcolor: theme.palette.background.paper,
+      // Grow with the label — money and category names stay on one line
+      width: 'max-content',
+      maxWidth: 'calc(100vw - 24px)',
+      minWidth: 0,
+      overflow: 'hidden',
+      padding: 0,
+      direction: theme.direction,
+    },
 
     [`& .${chartsTooltipClasses.table}`]: {
       borderSpacing: 0,
@@ -57,16 +68,15 @@ export function chartTooltipPaperSx(theme: Theme): SxProps<Theme> {
     },
 
     [`& .${chartsTooltipClasses.markContainer}`]: {
-      display: 'table-cell !important',
-      width: '18px !important',
-      minWidth: '18px !important',
-      maxWidth: '18px !important',
-      paddingTop: '0 !important',
-      paddingBottom: '0 !important',
-      paddingInlineStart: '10px !important',
-      paddingInlineEnd: '0 !important',
+      display: 'inline-flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      width: '14px',
+      height: '14px',
+      marginInlineEnd: '8px',
       verticalAlign: 'middle',
       lineHeight: 0,
+      padding: 0,
     },
 
     [`& .${chartsTooltipClasses.mark}`]: {

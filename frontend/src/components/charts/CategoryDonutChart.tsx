@@ -30,6 +30,7 @@ export function CategoryDonutChart({
   otherLabel,
 }: CategoryDonutChartProps) {
   const theme = useTheme();
+  const donutSize = Math.min(height, 176);
   const sorted = [...data]
     .filter((item) => item.value > 0)
     .sort((a, b) => b.value - a.value);
@@ -51,26 +52,38 @@ export function CategoryDonutChart({
   }));
 
   return (
-    <Stack
-      direction={{ xs: 'column', md: 'row' }}
-      spacing={2.5}
-      sx={{ alignItems: 'center', height: '100%' }}
+    <Box sx={{ containerType: 'inline-size', width: '100%' }}>
+      <Stack
+      spacing={1.5}
+      sx={{
+        alignItems: 'stretch',
+        '@container (min-width: 520px)': {
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 2.5,
+        },
+      }}
     >
       <Box
         sx={{
           position: 'relative',
-          width: { xs: '100%', md: 220 },
-          height,
+          width: donutSize,
+          height: donutSize,
+          mx: 'auto',
           flexShrink: 0,
+          '@container (min-width: 520px)': {
+            mx: 0,
+          },
         }}
       >
         <PieChart
-          height={height}
+          width={donutSize}
+          height={donutSize}
           series={[
             {
               data: chartData,
-              innerRadius: 66,
-              outerRadius: 94,
+              innerRadius: 52,
+              outerRadius: 74,
               paddingAngle: 2,
               cornerRadius: 3,
               cx: '50%',
@@ -136,19 +149,20 @@ export function CategoryDonutChart({
         </Box>
       </Box>
 
-      <Stack spacing={0.5} sx={{ flex: 1, width: '100%', minWidth: 0 }}>
+      <Stack spacing={0.25} sx={{ flex: 1, width: '100%', minWidth: 0 }}>
         {chartData.map((item) => {
           const pct = total > 0 ? (item.value / total) * 100 : 0;
           return (
-            <Stack
+            <Box
               key={String(item.id)}
-              direction="row"
-              spacing={1.25}
               sx={{
+                display: 'grid',
+                gridTemplateColumns: '8px minmax(0, 1fr) auto auto',
+                columnGap: 1.25,
                 alignItems: 'center',
                 minWidth: 0,
                 px: 1,
-                py: 0.55,
+                py: 0.7,
                 borderRadius: 1.25,
                 transition: 'background-color 120ms ease',
                 '&:hover': {
@@ -162,14 +176,17 @@ export function CategoryDonutChart({
                   height: 8,
                   borderRadius: 0.5,
                   bgcolor: item.color,
-                  flexShrink: 0,
                 }}
               />
               <Typography
                 variant="body2"
                 color="text.secondary"
-                noWrap
-                sx={{ flex: 1, minWidth: 0, fontSize: '0.8125rem' }}
+                sx={{
+                  minWidth: 0,
+                  fontSize: '0.8125rem',
+                  lineHeight: 1.35,
+                  overflowWrap: 'break-word',
+                }}
               >
                 {item.label}
               </Typography>
@@ -177,7 +194,7 @@ export function CategoryDonutChart({
                 variant="caption"
                 color="text.secondary"
                 className="tabular-nums"
-                sx={{ width: 36, textAlign: 'end', fontWeight: 600 }}
+                sx={{ fontWeight: 600, whiteSpace: 'nowrap' }}
               >
                 {pct.toFixed(0)}%
               </Typography>
@@ -186,17 +203,18 @@ export function CategoryDonutChart({
                 className="tabular-nums"
                 sx={{
                   fontWeight: 700,
-                  minWidth: 64,
                   textAlign: 'end',
                   fontSize: '0.8125rem',
+                  whiteSpace: 'nowrap',
                 }}
               >
                 {formatCompactMoney(item.value, language)}
               </Typography>
-            </Stack>
+            </Box>
           );
         })}
       </Stack>
-    </Stack>
+      </Stack>
+    </Box>
   );
 }
