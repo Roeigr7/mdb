@@ -15,7 +15,7 @@ import {
   ApiTooManyRequestsResponse,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { Throttle } from '../common/throttle.decorator.js';
 import type { Request, Response } from 'express';
 import {
   AuthTokensResponseDto,

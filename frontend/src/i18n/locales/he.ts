@@ -70,6 +70,9 @@ export const he = {
     register: 'הרשמה',
     createAccount: 'יצירת חשבון',
     subtitle: 'לוח בקרה תפעולי לפרויקטים ולרווחיות.',
+    demoAccessTitle: 'פרטי כניסה',
+    demoAccessEmail: 'test@test.com',
+    demoAccessPassword: 'test1234',
     heroLine: 'ניהול פרויקטים, הוצאות והכנסות במקום אחד.',
     heroSupport:
       'לוח בקרה מקצועי לצוותי מתכת ובנייה — ברור, מדויק ומוכן לעבודה יומיומית.',

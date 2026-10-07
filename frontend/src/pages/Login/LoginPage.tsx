@@ -277,6 +277,34 @@ export function LoginPage({ initialMode = 'login' }: LoginPageProps) {
               </Typography>
             </Stack>
 
+            {mode === 'login' && (
+              <Alert severity="info" sx={{ mb: 2.5 }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                  {t('auth.demoAccessTitle')}
+                </Typography>
+                <Typography variant="body2" sx={{ mt: 0.75 }}>
+                  {t('auth.email')}
+                </Typography>
+                <Typography
+                  variant="body1"
+                  dir="ltr"
+                  sx={{ fontWeight: 700, unicodeBidi: 'isolate' }}
+                >
+                  {t('auth.demoAccessEmail')}
+                </Typography>
+                <Typography variant="body2" sx={{ mt: 0.75 }}>
+                  {t('auth.password')}
+                </Typography>
+                <Typography
+                  variant="body1"
+                  dir="ltr"
+                  sx={{ fontWeight: 700, unicodeBidi: 'isolate' }}
+                >
+                  {t('auth.demoAccessPassword')}
+                </Typography>
+              </Alert>
+            )}
+
             <Stack spacing={2}>
               <OAuthButtons disabled={busy} />
 

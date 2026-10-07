@@ -6,17 +6,15 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { alpha } from '@mui/material/styles';
 import { useEffect, useRef, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import {
   Link as RouterLink,
-  Navigate,
   useNavigate,
   useSearchParams,
 } from 'react-router-dom';
 import { getErrorMessage } from '../../app/api/apiError';
 import { useExchangeOAuthCodeMutation } from '../../app/features/auth/authApi';
 import { establishSession } from '../../app/features/auth/establishSession';
-import { selectIsAuthenticated } from '../../app/features/auth/authSlice';
 import type { AppDispatch } from '../../app/store';
 import { tokens } from '../../app/theme';
 import { useAppTranslation } from '../../i18n/useAppTranslation';
@@ -25,7 +23,6 @@ export function AuthCallbackPage() {
   const { t } = useAppTranslation();
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
-  const isAuthenticated = useSelector(selectIsAuthenticated);
   const [searchParams] = useSearchParams();
   const code = searchParams.get('code');
   const [exchange, { isLoading }] = useExchangeOAuthCodeMutation();
@@ -49,9 +46,6 @@ export function AuthCallbackPage() {
     })();
   }, [code, dispatch, exchange, navigate, t]);
 
-  if (isAuthenticated && !error) {
-    return <Navigate to="/dashboard" replace />;
-  }
 
   return (
     <Box

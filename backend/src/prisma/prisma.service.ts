@@ -8,6 +8,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
   constructor() {
     const adapter = new PrismaPg({
       connectionString: process.env.DATABASE_URL!,
+      ...(process.env.VERCEL ? { max: 1 } : {}),
     });
 
     super({ adapter });

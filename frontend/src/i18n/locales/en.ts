@@ -72,6 +72,9 @@ export const en: typeof he = {
     register: 'Register',
     createAccount: 'Create account',
     subtitle: 'Internal operations dashboard for projects and profitability.',
+    demoAccessTitle: 'Sign-in details',
+    demoAccessEmail: 'test@test.com',
+    demoAccessPassword: 'test1234',
     heroLine: 'Projects, expenses and revenue — in one place.',
     heroSupport:
       'A professional dashboard for metals and construction teams — clear, precise, and ready for daily work.',

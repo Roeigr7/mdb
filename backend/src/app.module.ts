@@ -1,6 +1,4 @@
 import { Module } from '@nestjs/common';
-import { APP_GUARD } from '@nestjs/core';
-import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AnalyticsModule } from './analytics/analytics.module.js';
 import { AuthModule } from './auth/auth.module.js';
 import { DocumentsModule } from './documents/documents.module.js';
@@ -26,12 +24,6 @@ const observeImports = isObserveEnabled()
 @Module({
   imports: [
     ...observeImports,
-    ThrottlerModule.forRoot([
-      {
-        ttl: 60_000,
-        limit: 100,
-      },
-    ]),
     PrismaModule,
     AnalyticsModule,
     ProjectsModule,
@@ -42,12 +34,6 @@ const observeImports = isObserveEnabled()
     SuppliersModule,
     AuthModule,
     UsersModule,
-  ],
-  providers: [
-    {
-      provide: APP_GUARD,
-      useClass: ThrottlerGuard,
-    },
   ],
 })
 export class AppModule {}
