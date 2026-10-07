@@ -139,12 +139,16 @@ export function ProjectsPage() {
           </Box>
         ) : (
           <TableContainer sx={{ overflowX: 'auto' }}>
-            <Table size="medium" sx={{ minWidth: 640 }}>
+            <Table size="medium" sx={{ minWidth: { md: 640 }, width: '100%' }}>
               <TableHead>
                 <TableRow>
                   <TableCell>{t('projects.name')}</TableCell>
-                  <TableCell>{t('projects.description')}</TableCell>
-                  <TableCell>{t('projects.created')}</TableCell>
+                  <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
+                    {t('projects.description')}
+                  </TableCell>
+                  <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>
+                    {t('projects.created')}
+                  </TableCell>
                   <TableCell align="right">{t('common.actions')}</TableCell>
                 </TableRow>
               </TableHead>
@@ -165,12 +169,14 @@ export function ProjectsPage() {
                         {project.name}
                       </Typography>
                     </TableCell>
-                    <TableCell sx={{ maxWidth: 320 }}>
+                    <TableCell
+                      sx={{ maxWidth: 320, display: { xs: 'none', md: 'table-cell' } }}
+                    >
                       <Typography variant="body2" color="text.secondary" noWrap>
                         {project.description || t('common.none')}
                       </Typography>
                     </TableCell>
-                    <TableCell>
+                    <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>
                       <Typography variant="body2">
                         {formatDate(project.createdAt, i18n.language)}
                       </Typography>

@@ -139,13 +139,17 @@ export function MaterialsPanel({
         ) : (
           <>
             <TableContainer sx={{ overflowX: 'auto' }}>
-              <Table size="medium" sx={{ minWidth: 720 }}>
+              <Table size="medium" sx={{ minWidth: { md: 720 }, width: '100%' }}>
                 <TableHead>
                   <TableRow>
                     <TableCell>{t('materials.name')}</TableCell>
                     <TableCell>{t('materials.quantity')}</TableCell>
-                    <TableCell>{t('materials.unitPrice')}</TableCell>
-                    <TableCell>{t('materials.supplier')}</TableCell>
+                    <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>
+                      {t('materials.unitPrice')}
+                    </TableCell>
+                    <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
+                      {t('materials.supplier')}
+                    </TableCell>
                     <TableCell>{t('materials.cost')}</TableCell>
                     <TableCell align="right">{t('common.actions')}</TableCell>
                   </TableRow>
@@ -159,10 +163,12 @@ export function MaterialsPanel({
                       <TableCell>
                         {formatNumber(material.quantity, i18n.language)}
                       </TableCell>
-                      <TableCell>
+                      <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>
                         {formatMoney(material.unitPrice, i18n.language)}
                       </TableCell>
-                      <TableCell>{material.supplier || t('common.none')}</TableCell>
+                      <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
+                        {material.supplier || t('common.none')}
+                      </TableCell>
                       <TableCell>
                         {formatMoney(material.cost, i18n.language)}
                       </TableCell>

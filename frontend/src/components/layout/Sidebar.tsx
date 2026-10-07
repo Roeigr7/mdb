@@ -373,7 +373,11 @@ export function Sidebar({ mobileOpen, onClose }: SidebarProps) {
   return (
     <Box
       component="nav"
-      sx={{ width: { lg: desktopWidth }, flexShrink: { lg: 0 } }}
+      sx={{
+        width: { xs: 0, lg: desktopWidth },
+        flexShrink: 0,
+        overflow: 'hidden',
+      }}
       aria-label={t('nav.aria')}
     >
       <Drawer

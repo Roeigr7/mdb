@@ -224,6 +224,7 @@ export function DashboardPage() {
               letterSpacing: '-0.03em',
               fontSize: { xs: '1.25rem', sm: '1.375rem' },
               mb: 0.35,
+              overflowWrap: 'anywhere',
             }}
           >
             {t('dashboard.welcomeTitle', { name: displayName })}
@@ -232,7 +233,11 @@ export function DashboardPage() {
             {t('dashboard.welcomeBody')}
           </Typography>
         </Box>
-        <Stack direction="row" spacing={1} sx={{ flexShrink: 0 }}>
+        <Stack
+          direction={{ xs: 'column', sm: 'row' }}
+          spacing={1}
+          sx={{ width: { xs: '100%', sm: 'auto' }, minWidth: 0 }}
+        >
           <Button
             component={RouterLink}
             to="/projects"
@@ -507,14 +512,21 @@ export function DashboardPage() {
           </Box>
         ) : (
           <TableContainer sx={{ overflowX: 'auto' }}>
-            <Table size="medium" sx={{ minWidth: 720 }}>
+            <Table size="medium" sx={{ minWidth: { md: 720 }, width: '100%' }}>
               <TableHead>
                 <TableRow>
                   <TableCell>{t('projects.name')}</TableCell>
                   <TableCell align="right">{t('dashboard.colRevenue')}</TableCell>
-                  <TableCell align="right">{t('dashboard.colExpenses')}</TableCell>
+                  <TableCell
+                    align="right"
+                    sx={{ display: { xs: 'none', sm: 'table-cell' } }}
+                  >
+                    {t('dashboard.colExpenses')}
+                  </TableCell>
                   <TableCell align="right">{t('dashboard.colProfit')}</TableCell>
-                  <TableCell>{t('projects.created')}</TableCell>
+                  <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
+                    {t('projects.created')}
+                  </TableCell>
                   <TableCell align="right">{t('common.actions')}</TableCell>
                 </TableRow>
               </TableHead>
@@ -540,7 +552,7 @@ export function DashboardPage() {
                           variant="caption"
                           color="text.secondary"
                           noWrap
-                          sx={{ display: 'block', maxWidth: 280 }}
+                          sx={{ display: { xs: 'none', sm: 'block' }, maxWidth: 280 }}
                         >
                           {project.description || t('common.none')}
                         </Typography>
@@ -550,7 +562,11 @@ export function DashboardPage() {
                           ? formatMoney(finance.revenue, i18n.language)
                           : t('common.none')}
                       </TableCell>
-                      <TableCell align="right" className="tabular-nums">
+                      <TableCell
+                        align="right"
+                        className="tabular-nums"
+                        sx={{ display: { xs: 'none', sm: 'table-cell' } }}
+                      >
                         {finance
                           ? formatMoney(finance.expenses, i18n.language)
                           : t('common.none')}
@@ -569,7 +585,7 @@ export function DashboardPage() {
                             : t('common.none')}
                         </Typography>
                       </TableCell>
-                      <TableCell>
+                      <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
                         <Typography variant="body2" color="text.secondary">
                           {formatDate(project.updatedAt, i18n.language)}
                         </Typography>

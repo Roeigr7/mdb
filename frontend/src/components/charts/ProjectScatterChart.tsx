@@ -39,7 +39,7 @@ export function ProjectScatterChart({
   }));
 
   return (
-    <Box sx={{ width: '100%', height, overflow: 'visible' }}>
+    <Box sx={{ width: '100%', maxWidth: '100%', height, minWidth: 0, overflow: 'hidden' }}>
       <ScatterChart
         height={height}
         series={[

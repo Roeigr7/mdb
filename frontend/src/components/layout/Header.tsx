@@ -91,7 +91,10 @@ export function Header({ title, breadcrumbs, onMenuClick }: HeaderProps) {
       position="fixed"
       color="inherit"
       sx={{
-        width: { lg: `calc(100% - ${drawerWidth}px)` },
+        left: { xs: 0, lg: 'auto' },
+        right: { xs: 0, lg: 'auto' },
+        width: { xs: 'auto', lg: `calc(100% - ${drawerWidth}px)` },
+        maxWidth: '100%',
         marginInlineStart: { lg: `${drawerWidth}px` },
         color: 'text.primary',
         transition: (muiTheme) =>
@@ -103,18 +106,20 @@ export function Header({ title, breadcrumbs, onMenuClick }: HeaderProps) {
     >
       <Toolbar
         sx={{
-          gap: 1.5,
+          gap: { xs: 0.75, sm: 1.5 },
+          minWidth: 0,
           minHeight: { xs: HEADER_HEIGHT },
           height: HEADER_HEIGHT,
-          px: { xs: 2, sm: 3 },
+          px: { xs: 1, sm: 3 },
         }}
       >
         <IconButton
           color="inherit"
-          edge="start"
           onClick={onMenuClick}
           sx={{
             display: { lg: 'none' },
+            flexShrink: 0,
+            marginInlineStart: 0,
             border: '1px solid',
             borderColor: 'divider',
             borderRadius: 1.5,
@@ -226,7 +231,17 @@ export function Header({ title, breadcrumbs, onMenuClick }: HeaderProps) {
           />
         </Box>
 
-        <LanguageSwitcher />
+        <Box
+          sx={{
+            flexShrink: 0,
+            '& .MuiToggleButton-root': {
+              px: { xs: 0.75, sm: 1.25 },
+              fontSize: { xs: '0.7rem', sm: '0.8125rem' },
+            },
+          }}
+        >
+          <LanguageSwitcher />
+        </Box>
 
         <Tooltip title={t('header.notifications')}>
           <IconButton

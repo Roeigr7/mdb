@@ -19,7 +19,17 @@ function LayoutShell() {
   const { title, breadcrumbs } = usePageMeta();
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
+    <Box
+      sx={{
+        display: 'flex',
+        minHeight: '100vh',
+        width: '100%',
+        maxWidth: '100%',
+        minWidth: 0,
+        overflowX: 'clip',
+        bgcolor: 'background.default',
+      }}
+    >
       <Header
         title={title}
         breadcrumbs={breadcrumbs}
@@ -33,7 +43,10 @@ function LayoutShell() {
         component="main"
         sx={{
           flexGrow: 1,
-          width: { lg: `calc(100% - ${drawerWidth}px)` },
+          minWidth: 0,
+          maxWidth: '100%',
+          width: { xs: '100%', lg: `calc(100% - ${drawerWidth}px)` },
+          overflowX: 'clip',
           bgcolor: 'background.default',
           minHeight: '100vh',
           transition: (theme) =>
@@ -48,10 +61,13 @@ function LayoutShell() {
           className="mbd-page-enter"
           key={location.pathname}
           sx={{
-            p: { xs: 2, sm: 2.5, lg: 3 },
+            p: { xs: 1.5, sm: 2.5, lg: 3 },
             maxWidth: 1440,
             mx: 'auto',
             width: '100%',
+            minWidth: 0,
+            overflowX: 'clip',
+            boxSizing: 'border-box',
           }}
         >
           <Outlet />

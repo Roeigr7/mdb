@@ -76,7 +76,7 @@ export function AnalyticsDataTable<T>({
         </CardContent>
       ) : (
         <TableContainer sx={{ maxHeight, flex: 1 }}>
-          <Table size="small" stickyHeader sx={{ minWidth: 480 }}>
+          <Table size="small" stickyHeader sx={{ minWidth: { sm: 480 }, width: '100%' }}>
             <TableHead>
               <TableRow>
                 {columns.map((column) => (

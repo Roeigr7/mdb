@@ -271,7 +271,7 @@ export function DynamicCashflowCard({
           </Stack>
         </Stack>
 
-        <Box sx={{ flex: 1, minHeight: height, overflow: 'visible' }}>
+        <Box sx={{ flex: 1, minHeight: height, minWidth: 0, maxWidth: '100%', overflow: 'hidden' }}>
           {!hasData ? (
             <Box
               sx={{
@@ -289,7 +289,7 @@ export function DynamicCashflowCard({
               </Typography>
             </Box>
           ) : (
-            <Box sx={{ width: '100%', height, overflow: 'visible' }}>
+            <Box sx={{ width: '100%', maxWidth: '100%', height, minWidth: 0, overflow: 'hidden' }}>
               <LineChart
                 height={height}
                 series={[

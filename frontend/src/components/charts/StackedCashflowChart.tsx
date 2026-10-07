@@ -31,7 +31,7 @@ export function StackedCashflowChart({
     formatMoney(value ?? 0, language);
 
   return (
-    <Box sx={{ width: '100%', height, overflow: 'visible' }}>
+    <Box sx={{ width: '100%', maxWidth: '100%', height, minWidth: 0, overflow: 'hidden' }}>
       <BarChart
         height={height}
         borderRadius={4}

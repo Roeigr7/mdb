@@ -206,11 +206,13 @@ export function ExpensesPanel({
         ) : (
           <>
             <TableContainer sx={{ overflowX: 'auto' }}>
-              <Table size="medium" sx={{ minWidth: 640 }}>
+              <Table size="medium" sx={{ minWidth: { md: 640 }, width: '100%' }}>
                 <TableHead>
                   <TableRow>
                     <TableCell>{t('expenses.description')}</TableCell>
-                    <TableCell>{t('expenses.category')}</TableCell>
+                    <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>
+                      {t('expenses.category')}
+                    </TableCell>
                     <TableCell>{t('expenses.date')}</TableCell>
                     <TableCell align="right">{t('expenses.amount')}</TableCell>
                     <TableCell align="right">{t('common.actions')}</TableCell>
@@ -224,7 +226,7 @@ export function ExpensesPanel({
                           {expense.description}
                         </Typography>
                       </TableCell>
-                      <TableCell>
+                      <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>
                         <Typography variant="body2" color="text.secondary">
                           {expense.category || t('common.none')}
                         </Typography>

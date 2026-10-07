@@ -92,6 +92,9 @@ export function LoginPage({ initialMode = 'login' }: LoginPageProps) {
     <Box
       sx={{
         minHeight: '100vh',
+        width: '100%',
+        maxWidth: '100%',
+        overflowX: 'clip',
         display: 'grid',
         gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
       }}

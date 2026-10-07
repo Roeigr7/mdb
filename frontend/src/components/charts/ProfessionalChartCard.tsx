@@ -205,7 +205,7 @@ export function ProfessionalChartCard({
           </Stack>
         </Stack>
 
-        <Box sx={{ flex: 1, minHeight: height, overflow: 'visible' }}>
+        <Box sx={{ flex: 1, minHeight: height, minWidth: 0, maxWidth: '100%', overflow: 'hidden' }}>
           {loading ? (
             <Skeleton variant="rounded" height={height} />
           ) : error ? (

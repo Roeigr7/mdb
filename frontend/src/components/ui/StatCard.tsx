@@ -146,13 +146,15 @@ export function StatCard({
           </Stack>
 
           {(trend || hint || hasSpark) && (
-            <Stack
+              <Stack
               direction="row"
               spacing={1.5}
               sx={{
                 alignItems: 'flex-end',
                 justifyContent: 'space-between',
                 minHeight: 32,
+                minWidth: 0,
+                flexWrap: 'wrap',
               }}
             >
               <Stack spacing={0.35} sx={{ minWidth: 0 }}>
@@ -188,7 +190,11 @@ export function StatCard({
                         {trend.value.toFixed(1)}%
                       </Typography>
                     </Box>
-                    <Typography variant="caption" color="text.secondary" noWrap>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{ minWidth: 0, overflowWrap: 'anywhere' }}
+                    >
                       {trend.label}
                     </Typography>
                   </Stack>

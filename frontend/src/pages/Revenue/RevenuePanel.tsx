@@ -216,11 +216,13 @@ export function RevenuePanel({
         ) : (
           <>
             <TableContainer sx={{ overflowX: 'auto' }}>
-              <Table size="medium" sx={{ minWidth: 720 }}>
+              <Table size="medium" sx={{ minWidth: { md: 720 }, width: '100%' }}>
                 <TableHead>
                   <TableRow>
                     <TableCell>{t('revenue.description')}</TableCell>
-                    <TableCell>{t('revenue.customer')}</TableCell>
+                    <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>
+                      {t('revenue.customer')}
+                    </TableCell>
                     <TableCell>{t('revenue.date')}</TableCell>
                     <TableCell align="right">{t('revenue.amount')}</TableCell>
                     <TableCell>{t('revenue.status')}</TableCell>
@@ -235,7 +237,7 @@ export function RevenuePanel({
                           {entry.description}
                         </Typography>
                       </TableCell>
-                      <TableCell>
+                      <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>
                         <Typography variant="body2" color="text.secondary">
                           {entry.customer || t('common.none')}
                         </Typography>

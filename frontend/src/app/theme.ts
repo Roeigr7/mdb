@@ -492,6 +492,12 @@ export function createAppTheme(direction: Direction) {
             paddingBottom: 12,
             fontSize: '0.8125rem',
             fontVariantNumeric: 'tabular-nums',
+            '@media (max-width:599.95px)': {
+              paddingTop: 10,
+              paddingBottom: 10,
+              paddingInline: 10,
+              overflowWrap: 'anywhere',
+            },
           },
           sizeSmall: {
             paddingTop: 8,
@@ -503,6 +509,9 @@ export function createAppTheme(direction: Direction) {
         styleOverrides: {
           root: {
             borderRadius: tokens.radius.lg,
+            width: '100%',
+            maxWidth: '100%',
+            overflowX: 'auto',
           },
         },
       },

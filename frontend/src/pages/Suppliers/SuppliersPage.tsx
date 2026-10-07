@@ -171,14 +171,20 @@ export function SuppliersPage() {
           </Box>
         ) : (
           <TableContainer sx={{ overflowX: 'auto' }}>
-            <Table size="medium" sx={{ minWidth: 720 }}>
+            <Table size="medium" sx={{ minWidth: { md: 720 }, width: '100%' }}>
               <TableHead>
                 <TableRow>
                   <TableCell>{t('suppliers.name')}</TableCell>
-                  <TableCell>{t('suppliers.email')}</TableCell>
+                  <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
+                    {t('suppliers.email')}
+                  </TableCell>
                   <TableCell>{t('suppliers.phone')}</TableCell>
-                  <TableCell>{t('suppliers.notes')}</TableCell>
-                  <TableCell>{t('suppliers.updated')}</TableCell>
+                  <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
+                    {t('suppliers.notes')}
+                  </TableCell>
+                  <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>
+                    {t('suppliers.updated')}
+                  </TableCell>
                   <TableCell align="right">{t('common.actions')}</TableCell>
                 </TableRow>
               </TableHead>
@@ -188,7 +194,7 @@ export function SuppliersPage() {
                     <TableCell>
                       <Typography variant="subtitle2">{supplier.name}</Typography>
                     </TableCell>
-                    <TableCell>
+                    <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
                       <Typography variant="body2" color="text.secondary">
                         {supplier.email || t('common.none')}
                       </Typography>
@@ -198,12 +204,14 @@ export function SuppliersPage() {
                         {supplier.phone || t('common.none')}
                       </Typography>
                     </TableCell>
-                    <TableCell sx={{ maxWidth: 240 }}>
+                    <TableCell
+                      sx={{ maxWidth: 240, display: { xs: 'none', md: 'table-cell' } }}
+                    >
                       <Typography variant="body2" color="text.secondary" noWrap>
                         {supplier.notes || t('common.none')}
                       </Typography>
                     </TableCell>
-                    <TableCell>
+                    <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>
                       <Typography variant="body2">
                         {formatDate(supplier.updatedAt, i18n.language)}
                       </Typography>

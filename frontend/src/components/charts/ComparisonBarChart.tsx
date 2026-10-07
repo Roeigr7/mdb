@@ -44,7 +44,7 @@ export function ComparisonBarChart({
   const isHorizontal = layout === 'horizontal';
 
   return (
-    <Box sx={{ width: '100%', height, overflow: 'visible' }}>
+    <Box sx={{ width: '100%', maxWidth: '100%', height, minWidth: 0, overflow: 'hidden' }}>
       <BarChart
         height={height}
         layout={isHorizontal ? 'horizontal' : 'vertical'}
